@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const { ContainerBuilder, TextDisplayBuilder, SectionBuilder, ThumbnailBuilder, SeparatorBuilder } = require('@discordjs/builders');
 const config = require('../../config/config.json');
+const logger = require('../../console/logger');
 
 module.exports = {
     data: new SlashCommandBuilder()

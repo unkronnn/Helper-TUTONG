@@ -79,6 +79,15 @@ module.exports = {
                         '6': '> Rp 1.000.000'
                     };
 
+                    const feeMap = {
+                        '1': 'Rp 2.000',
+                        '2': 'Rp 5.000',
+                        '3': 'Rp 10.000',
+                        '4': 'Rp 15.000',
+                        '5': 'Rp 25.000',
+                        '6': '2% flat'
+                    };
+
                     const userSelect = new UserSelectMenuBuilder()
                         .setCustomId(`middleman_user_select_${rangeValue}`)
                         .setPlaceholder('Pilih pembeli atau penjual')
@@ -87,7 +96,7 @@ module.exports = {
                     const selectRow = new ActionRowBuilder().addComponents(userSelect);
 
                     const titleBlock = new TextDisplayBuilder()
-                        .setContent(`# Voxteria - Middleman\n**Tambahkan Pembeli/Penjual**\n\n**✅ Range Transaksi Dipilih: **${rangeMap[rangeValue]}\nSekarang pilih pembeli atau penjual yang akan ditambahkan ke ticket:`);
+                        .setContent(`# Voxteria - Middleman\n**Tambahkan Pembeli/Penjual**\n\n**✅ Range Transaksi Dipilih: **${rangeMap[rangeValue]}\n**💰 Biaya:** ${feeMap[rangeValue]}\n\nSekarang pilih pembeli atau penjual yang akan ditambahkan ke ticket:`);
 
                     const container = new ContainerBuilder()
                         .setAccentColor(parseInt(config.color.replace('#', ''), 16))

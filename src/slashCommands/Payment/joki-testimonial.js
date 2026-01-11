@@ -2,6 +2,7 @@ const { SlashCommandBuilder, ChannelType, ButtonStyle, ModalBuilder, TextInputBu
 const { ContainerBuilder, TextDisplayBuilder, SectionBuilder, ThumbnailBuilder, ButtonBuilder, ActionRowBuilder, SeparatorBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder } = require('@discordjs/builders');
 const { MessageFlags } = require('discord.js');
 const config = require('../../config/config.json');
+const logger = require('../../console/logger');
 
 // Format price to Rupiah
 const formatRupiah = (price) => {
