@@ -21,7 +21,7 @@
   },
   "type": "javascript",
   "author": "nop4al",
-  "homepage": "https://github.com/nop4al/voxhelper.git",
+  "homepage": "https://github.com/nop4al/VoxAssistant.git",
   "dependencies": {
     "colors": "^1.4.0",
     "discord-hybrid-sharding": "^3.0.1",
