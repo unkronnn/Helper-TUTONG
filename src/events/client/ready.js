@@ -3,12 +3,19 @@ const colors = require('colors');
 const config = require('../../config/config.json');
 
 // Activity list
-const activities = [
-    { name: '/help untuk bantuan', type: ActivityType.Watching },
-    { name: 'pesan dari user', type: ActivityType.Listening },
-    { name: 'moderasi server', type: ActivityType.Playing },
-    { name: 'warning logs', type: ActivityType.Watching }
-];
+const getActivities = (client) => {
+    const guild = client.guilds.cache.first();
+    if (!guild) return [];
+    
+    const memberCount = guild.memberCount;
+    const buyerRole = guild.roles.cache.get(config.buyerRoleId);
+    const buyerCount = buyerRole ? buyerRole.members.size : 0;
+    
+    return [
+        { name: `${memberCount} members and ${buyerCount} buyers!`, type: ActivityType.Watching },
+        { name: 'your transactions', type: ActivityType.Watching }
+    ];
+};
 
 let activityIndex = 0;
 
@@ -215,6 +222,9 @@ async function autoSendMiddlemanEmbed(client) {
 
 // Function to update activity
 function updateActivity(client) {
+    const activities = getActivities(client);
+    if (activities.length === 0) return;
+    
     const activity = activities[activityIndex];
     client.user.setPresence({
         status: 'online',
