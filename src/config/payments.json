@@ -1,0 +1,30 @@
+{
+  "lokal": {
+    "jago": {
+      "norek": "507289918017"
+    },
+    "seabank": {
+      "norek": "901872547726"
+    },
+    "bca": {
+      "norek": "4650769886"
+    },
+    "qris": {
+      "imageUrl": "https://i.ibb.co.com/gMPCgLD0/image.png"
+    }
+  },
+  "internasional": {
+    "crypto": {
+      "btc": "1QL2J7iBCUzdf58s3LM7Vs38x3qPwuuUtY",
+      "ethereum_erc20": "0x197c1906976c48548edfb16b58719060344e0ee9",
+      "usdt_erc20": "0x197c1906976c48548edfb16b58719060344e0ee9"
+    },
+    "paypal": {
+      "email": "palqhon@gmail.com"
+    },
+    "binance": {
+      "id": "958850331",
+      "qrUrl": "https://i.ibb.co.com/1Y40t9Vx/Binance-ID.jpg"
+    }
+  }
+}

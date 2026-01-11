@@ -47,11 +47,25 @@ module.exports = {
 
     // Measure latency
     const sent = Date.now();
+    const apiLatency = Date.now() - sent;
+    const wsLatency = client.ws.ping;
+    const uptime = client.uptime;
+
+    // Calculate status indicator
+    const getStatus = (latency) => {
+      if (latency < 100) return '🟢 Excellent';
+      if (latency < 200) return '🟡 Good';
+      if (latency < 400) return '🟠 Fair';
+      return '🔴 Poor';
+    };
+
+    const uptimeStr = formatUptime(uptime);
+
     const pingText = new TextDisplayBuilder()
       .setContent(
-        `# 🏓 **Pong!**\n` +
-        `**WebSocket Ping:** ${client.ws.ping}ms\n` +
-        `**API Response Time:** ${Date.now() - sent}ms`
+        `# 🏓 **Bot Status**\n\n` +
+        `**WebSocket Ping:** ${wsLatency}ms (${getStatus(wsLatency)})\n` +
+        `**API Response:** ${apiLatency}ms`
       );
 
     const separator = new SeparatorBuilder();
@@ -67,3 +81,15 @@ module.exports = {
     });
   },
 };
+
+function formatUptime(ms) {
+  const seconds = Math.floor((ms / 1000) % 60);
+  const minutes = Math.floor((ms / (1000 * 60)) % 60);
+  const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}

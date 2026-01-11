@@ -1,7 +1,7 @@
 {
-  "name": "discord.js-v14-v2-template",
-  "version": "1.0.3",
-  "description": "A Discord.js v14 template with v2 components",
+  "name": "VoxHelper",
+  "version": "0.0.1",
+  "description": "Simple discord bot made for Voxteria!",
   "license": "ISC",
   "keywords": [
     "discord.js",
@@ -16,15 +16,21 @@
   ],
   "main": "src/zar.js",
   "scripts": {
-    "start": "node src/zar.js"
+    "start": "node src/zar.js",
+    "dev": "nodemon src/zar.js"
   },
-  "type": "commonjs",
-  "author": "ZarScape",
-  "homepage": "https://github.com/ZarScape/discord.js-v14-v2-template.git",
+  "type": "javascript",
+  "author": "nop4al",
+  "homepage": "https://github.com/nop4al/voxhelper.git",
   "dependencies": {
     "colors": "^1.4.0",
     "discord-hybrid-sharding": "^3.0.1",
     "discord.js": "^14.25.1",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "mongoose": "^7.0.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }

@@ -6,3 +6,12 @@ node_modules/
 
 # Package lock file
 package-lock.json
+
+# V2 Components Templates
+src/slashCommands/V2-Components
+
+# Assets
+assets/
+
+# Logs
+logs/

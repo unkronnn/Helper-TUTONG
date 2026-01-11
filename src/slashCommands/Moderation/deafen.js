@@ -1,0 +1,121 @@
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { TextDisplayBuilder, ContainerBuilder, MessageFlags } = require('discord.js');
+const config = require('../../config/config.json');
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('deafen')
+    .setDescription('Deafen seorang user (tidak bisa mendengar audio)')
+    .addUserOption(option =>
+      option
+        .setName('user')
+        .setDescription('User yang akan di-deafen')
+        .setRequired(true)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.DeafenMembers),
+
+  /**
+   * @param {import('discord.js').Client} client 
+   * @param {import('discord.js').CommandInteraction} interaction 
+   */
+  run: async (client, interaction) => {
+    const targetUser = interaction.options.getUser('user');
+    const guild = interaction.guild;
+
+    try {
+      // Check if user has permission
+      if (!interaction.member.permissions.has(PermissionFlagsBits.DeafenMembers)) {
+        const errorText = new TextDisplayBuilder()
+          .setContent('❌ Kamu tidak memiliki permission untuk deafen member');
+
+        const errorContainer = new ContainerBuilder()
+          .setAccentColor(0xFF0000)
+          .addTextDisplayComponents(errorText);
+
+        return interaction.reply({
+          flags: MessageFlags.IsComponentsV2,
+          components: [errorContainer],
+        });
+      }
+
+      // Check if bot can deafen
+      if (!guild.members.me.permissions.has(PermissionFlagsBits.DeafenMembers)) {
+        const errorText = new TextDisplayBuilder()
+          .setContent('❌ Bot tidak memiliki permission untuk deafen member');
+
+        const errorContainer = new ContainerBuilder()
+          .setAccentColor(0xFF0000)
+          .addTextDisplayComponents(errorText);
+
+        return interaction.reply({
+          flags: MessageFlags.IsComponentsV2,
+          components: [errorContainer],
+        });
+      }
+
+      // Cannot deafen yourself
+      if (targetUser.id === interaction.user.id) {
+        const errorText = new TextDisplayBuilder()
+          .setContent('❌ Kamu tidak bisa deafen dirimu sendiri');
+
+        const errorContainer = new ContainerBuilder()
+          .setAccentColor(0xFF0000)
+          .addTextDisplayComponents(errorText);
+
+        return interaction.reply({
+          flags: MessageFlags.IsComponentsV2,
+          components: [errorContainer],
+        });
+      }
+
+      const targetMember = await guild.members.fetch(targetUser.id);
+
+      // Check if member is in voice
+      if (!targetMember.voice.channel) {
+        const errorText = new TextDisplayBuilder()
+          .setContent('❌ Member tidak berada di voice channel');
+
+        const errorContainer = new ContainerBuilder()
+          .setAccentColor(0xFF0000)
+          .addTextDisplayComponents(errorText);
+
+        return interaction.reply({
+          flags: MessageFlags.IsComponentsV2,
+          components: [errorContainer],
+        });
+      }
+
+      await targetMember.voice.setDeaf(true);
+
+      const successText = new TextDisplayBuilder()
+        .setContent(
+          `**DEAFENED**\n\n` +
+          `Target: ${targetUser.username}\n` +
+          `User ID: ${targetUser.id}\n` +
+          `Moderator: ${interaction.user.username}`
+        );
+
+      const successContainer = new ContainerBuilder()
+        .setAccentColor(parseInt(config.color, 16))
+        .addTextDisplayComponents(successText);
+
+      await interaction.reply({
+        flags: MessageFlags.IsComponentsV2,
+        components: [successContainer],
+      });
+    } catch (error) {
+      console.error(error);
+      const errorText = new TextDisplayBuilder()
+        .setContent('❌ Terjadi kesalahan saat men-deafen member');
+
+      const errorContainer = new ContainerBuilder()
+        .setAccentColor(0xFF0000)
+        .addTextDisplayComponents(errorText);
+
+      return interaction.reply({
+        flags: MessageFlags.IsComponentsV2,
+        components: [errorContainer],
+      });
+    }
+  }
+};

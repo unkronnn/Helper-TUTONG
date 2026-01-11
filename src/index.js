@@ -4,6 +4,10 @@ require('./console/watermark');
 const { Client, Partials, Collection } = require('discord.js');
 const colors = require('colors');
 const { ClusterClient } = require('discord-hybrid-sharding');
+const { connectDB } = require('./database/mongodb');
+
+// Connect to MongoDB
+connectDB();
 
 // Create Discord client
 const client = new Client({
