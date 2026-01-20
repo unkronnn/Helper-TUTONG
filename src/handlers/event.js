@@ -12,19 +12,25 @@ module.exports = (client) => {
         const files = fs.readdirSync(`./src/events/${dir}`).filter(f => f.endsWith('.js'));
 
         for (const file of files) {
-            const event = require(`../events/${dir}/${file}`);
-            if (!event.name) {
-                skippedEvents.push(file);
-                continue;
-            }
+            const eventModule = require(`../events/${dir}/${file}`);
+            
+            // Handle both single event and multiple events (array)
+            const events = Array.isArray(eventModule) ? eventModule : [eventModule];
+            
+            for (const event of events) {
+                if (!event.name) {
+                    skippedEvents.push(file);
+                    continue;
+                }
 
-            if (event.once) {
-                client.once(event.name, (...args) => event.execute(client, ...args));
-            } else {
-                client.on(event.name, (...args) => event.execute(client, ...args));
-            }
+                if (event.once) {
+                    client.once(event.name, (...args) => event.execute(client, ...args));
+                } else {
+                    client.on(event.name, (...args) => event.execute(client, ...args));
+                }
 
-            loadedEvents.push(`${event.name}${event.once ? ' (once)' : ''}`);
+                loadedEvents.push(`${event.name}${event.once ? ' (once)' : ''}`);
+            }
         }
     });
 

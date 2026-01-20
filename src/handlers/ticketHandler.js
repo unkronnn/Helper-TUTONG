@@ -23,6 +23,17 @@ const logger = require('../console/logger');
 
 // ==================== HELPER FUNCTIONS ====================
 
+// Simple lock mechanism - prevent concurrent ticket creation per user
+const ticketCreationLocks = new Map(); // userId -> timestamp
+
+// Format number to Indonesian Rupiah format (e.g., 2000000 -> 2.000.000)
+const formatRupiah = (num) => {
+    if (typeof num === 'string') {
+        num = parseInt(num.replace(/\D/g, '')) || 0;
+    }
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
 const getStatus = () => {
     try {
         const statusFile = path.join(__dirname, '../config/status.json');
@@ -40,7 +51,7 @@ const getStatus = () => {
 
 const checkUserTicketCount = async (userId, client) => {
     try {
-        const ticketChannel = await client.channels.fetch(config.ticketChannelId);
+        const ticketChannel = await client.channels.fetch(config.channels.tickets);
         if (!ticketChannel) {
             logger.warn('[TICKET COUNT] Channel not found');
             return 0;
@@ -50,7 +61,7 @@ const checkUserTicketCount = async (userId, client) => {
         let userTicketCount = 0;
         
         logger.debug(`[TICKET COUNT] Checking threads for user ${userId}`);
-        for (const [id, thread] of threads) {
+        for (const thread of threads.threads.values()) {
             logger.debug(`[TICKET COUNT] Thread: ${thread.name}, Owner: ${thread.ownerId}, Starts with midman: ${thread.name.startsWith('midman-')}`);
             if (thread.ownerId === userId && !thread.name.startsWith('midman-')) {
                 userTicketCount++;
@@ -66,78 +77,88 @@ const checkUserTicketCount = async (userId, client) => {
     }
 };
 
-// ==================== TICKET BUTTON HANDLERS ====================
-
-async function handleTicketPurchaseButton(interaction, client) {
-    // Check status
+const checkStoreStatus = (type = 'ticket') => {
     const status = getStatus();
+    logger.debug(`[TICKET] Status check: isOpen=${status.isOpen}`);
+    
     if (status.isOpen === false) {
-        logger.debug(`[TICKET] User ${interaction.user.tag} blocked from purchase - toko tutup`);
+        logger.debug(`[TICKET] Store closed - cannot open ${type}`);
         const errorBlock = new ContainerBuilder()
-            .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+            .setAccentColor(parseInt(config.primaryColor, 16))
             .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent('❌ Toko sedang tutup! Tidak bisa membeli sekarang.')
+                new TextDisplayBuilder().setContent(`❌ Toko sedang tutup! Tidak bisa membuka ${type} sekarang.`)
             );
-        return await interaction.reply({
-            components: [errorBlock],
-            flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-        });
+        return { isOpen: false, errorBlock };
     }
+    return { isOpen: true };
+};
 
-    const purchaseModal = new ModalBuilder()
-        .setCustomId('purchase_form_modal')
-        .setTitle('Purchase Form');
+const createStaffNotification = (type, ticketId, interaction, accentColor, detailsBuilder, threadId, isMiddleman = false) => {
+    const userAvatar = interaction.user.displayAvatarURL({ size: 256, dynamic: true });
+    
+    const typeMap = {
+        'help': 'A Help Ticket is Opened!',
+        'purchase': 'A Purchase Ticket is Opened!',
+        'middleman': 'A Middleman Ticket is Opened!'
+    };
 
-    const productInput = new TextInputBuilder()
-        .setCustomId('purchase_product')
-        .setLabel('Nama Produk/Item yang ingin Kamu Beli')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+    const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
+    const notifTitle = new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## **🎫 Join Ticket**\n\n**${typeMap[type]}**`))
+        .setThumbnailAccessory(thumbnail);
 
-    const methodInput = new TextInputBuilder()
-        .setCustomId('purchase_method')
-        .setLabel('Metode Pembayaran')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('QRIS/Bank Jago/Seabank')
-        .setRequired(true);
+    const staffPing = new TextDisplayBuilder()
+        .setContent(`<@&${config.roles.staff}> - Ticket Baru!`);
 
-    const notesInput = new TextInputBuilder()
-        .setCustomId('purchase_notes')
-        .setLabel('Catatan')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Ada request khusus? Tulis disini!')
-        .setRequired(false);
+    const staffCount = new TextDisplayBuilder()
+        .setContent(`• **Staff in ${isMiddleman ? 'Request' : 'Ticket'}:** 0\n• **Staff Members:** None`);
 
-    const row1 = new ActionRowBuilder().addComponents(productInput);
-    const row2 = new ActionRowBuilder().addComponents(methodInput);
-    const row3 = new ActionRowBuilder().addComponents(notesInput);
+    const notifSep = new SeparatorBuilder();
 
-    purchaseModal.addComponents(row1, row2, row3);
-    return await interaction.showModal(purchaseModal);
-}
+    const notifContainer = new ContainerBuilder()
+        .setAccentColor(accentColor)
+        .addTextDisplayComponents(staffPing)
+        .addSeparatorComponents(notifSep)
+        .addSectionComponents(notifTitle)
+        .addSeparatorComponents(notifSep)
+        .addTextDisplayComponents(detailsBuilder)
+        .addSeparatorComponents(notifSep)
+        .addTextDisplayComponents(staffCount);
 
-async function handleTicketHelpButton(interaction, client) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const joinBtn = new ButtonBuilder()
+        .setCustomId(`${isMiddleman ? 'middleman' : 'ticket'}_join_${threadId}`)
+        .setLabel(`Join ${isMiddleman ? 'Request' : 'Ticket'}`)
+        .setStyle(ButtonStyle.Secondary);
 
+    const notifButtonRow = new ActionRowBuilder().addComponents(joinBtn);
+
+    return { notifContainer, notifButtonRow };
+};
+
+// Create ticket helper for Help and Purchase types
+const createTicket = async (type, interaction, client, formData = null) => {
+    const userId = interaction.user.id;
+    
     try {
-        // Check status
-        const status = getStatus();
-        logger.debug(`[TICKET] Status check: isOpen=${status.isOpen}, type=${typeof status.isOpen}`);
-        
-        // Safety check
-        if (status.isOpen === undefined) {
-            console.warn('[TICKET] WARNING: status.isOpen is undefined! Defaulting to allowing tickets.');
+        // Check if user already creating a ticket
+        if (ticketCreationLocks.has(userId)) {
+            logger.warn(`[TICKET] ⛔ BLOCKED - ${interaction.user.tag} already creating ticket`);
+            return;
         }
         
-        if (status.isOpen === false) {
+        // Lock user
+        ticketCreationLocks.set(userId, Date.now());
+        
+        // Auto-unlock after 25 seconds
+        setTimeout(() => ticketCreationLocks.delete(userId), 25000);
+        
+        try {
+            // Check status
+            const statusCheck = checkStoreStatus(`${type} ticket`);
+        if (!statusCheck.isOpen) {
             logger.debug(`[TICKET] User ${interaction.user.tag} blocked - toko tutup`);
-            const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Toko sedang tutup! Tidak bisa membuka ticket sekarang.')
-                );
             return await interaction.editReply({
-                components: [errorBlock],
+                components: [statusCheck.errorBlock],
                 flags: MessageFlags.IsComponentsV2,
             });
         }
@@ -148,9 +169,9 @@ async function handleTicketHelpButton(interaction, client) {
         if (ticketCount >= 1) {
             logger.debug(`[TICKET] User ${interaction.user.tag} blocked - sudah punya ticket`);
             const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+                .setAccentColor(parseInt(config.primaryColor, 16))
                 .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Kamu sudah membuka 1 ticket! Tutup ticket lama kamu terlebih dahulu sebelum membuka ticket baru.')
+                    new TextDisplayBuilder().setContent('❌ You\'re only allowed to have 1 active ticket at a time.')
                 );
             return await interaction.editReply({
                 components: [errorBlock],
@@ -158,13 +179,13 @@ async function handleTicketHelpButton(interaction, client) {
             });
         }
 
-        const ticketChannel = await client.channels.fetch(config.ticketChannelId);
+        const ticketChannel = await client.channels.fetch(config.channels.tickets);
 
         if (!ticketChannel) {
             const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+                .setAccentColor(parseInt(config.primaryColor, 16))
                 .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Channel ticket tidak ditemukan!')
+                    new TextDisplayBuilder().setContent('❌ Ticket channel not found!')
                 );
             return await interaction.editReply({
                 components: [errorBlock],
@@ -172,18 +193,19 @@ async function handleTicketHelpButton(interaction, client) {
             });
         }
 
-        const threadName = `help-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.color.replace('#', ''), 16);
+        const threadPrefix = type === 'purchase' ? 'purchase' : 'help';
+        const threadName = `${threadPrefix}-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
+        const accentColor = parseInt(config.primaryColor, 16);
 
         const title = new TextDisplayBuilder()
-            .setContent('# Tickets System - Help');
+            .setContent(`# Tickets System - ${type.charAt(0).toUpperCase() + type.slice(1)}`);
 
         const description = new TextDisplayBuilder()
             .setContent(`Terima kasih sudah membuat ticket.
 Silahkan tuliskan kebutuhan kamu dengan jelas agar tim kami bisa membantu lebih cepat!
 
 ## 🚫 **Catatan:**
-• Mohon gunakan ticket ini sesuai kebutuhan (order, bantuan, atau midman).
+• Mohon gunakan ticket ini sesuai kebutuhan.
 • Hindari membuka ticket hanya untuk iseng, karena bisa berakibat blacklist.
 • Jika kamu sudah menuliskan detail, harap tunggu respon dari tim kami.
 
@@ -192,6 +214,12 @@ Terima kasih atas pengertian dan kerjasamanya! 🙏`);
         const userInfo = new TextDisplayBuilder()
             .setContent(`**User:** ${interaction.user.tag}\n**Created:** <t:${Math.floor(Date.now() / 1000)}:f>`);
 
+        let infoSection = null;
+        if (type === 'purchase' && formData) {
+            infoSection = new TextDisplayBuilder()
+                .setContent(`**Produk:** ${formData.productName}\n**Metode Pembayaran:** ${formData.paymentMethod}\n**Catatan:** ${formData.notes}`);
+        }
+
         const sep = new SeparatorBuilder();
 
         const container = new ContainerBuilder()
@@ -199,7 +227,15 @@ Terima kasih atas pengertian dan kerjasamanya! 🙏`);
             .addTextDisplayComponents(title)
             .addSeparatorComponents(sep)
             .addTextDisplayComponents(description)
-            .addSeparatorComponents(sep)
+            .addSeparatorComponents(sep);
+
+        if (infoSection) {
+            container
+                .addTextDisplayComponents(infoSection)
+                .addSeparatorComponents(sep);
+        }
+
+        container
             .addTextDisplayComponents(userInfo);
 
         const closeBtn = new ButtonBuilder()
@@ -234,44 +270,22 @@ Terima kasih atas pengertian dan kerjasamanya! 🙏`);
 
         await newTicket.members.add(interaction.user.id);
 
+        // Generate ticketId
+        const ticketId = `${interaction.guild.name.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
         // Send staff notification
         try {
-            const staffChannel = await client.channels.fetch(config.notificationChannelId);
+            const staffChannel = await client.channels.fetch(config.channels.openedTickets);
             if (staffChannel) {
-                const ticketId = `${interaction.guild.name.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-                const userAvatar = interaction.user.displayAvatarURL({ size: 256, dynamic: true });
+                let staffDetailsContent = `• **Ticket ID:** ${ticketId}\n• **Type:** ${type.charAt(0).toUpperCase() + type.slice(1)}\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet`;
+                
+                if (type === 'purchase' && formData) {
+                    staffDetailsContent += `\n\n**Product:** ${formData.productName}\n**Payment Method:** ${formData.paymentMethod}\n**Description:** ${formData.notes}`;
+                }
 
-                const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
-                const notifTitle = new SectionBuilder()
-                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## **🎫 Join Ticket**\n\n**A Help Ticket is Opened!**`))
-                    .setThumbnailAccessory(thumbnail);
+                const ticketDetails = new TextDisplayBuilder().setContent(staffDetailsContent);
 
-                const ticketDetails = new TextDisplayBuilder()
-                    .setContent(`• **Ticket ID:** ${ticketId}\n• **Type:** Help\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet`);
-
-                const staffCount = new TextDisplayBuilder()
-                    .setContent(`• **Staff in Ticket:** 0\n• **Staff Members:** None`);
-
-                const staffPing = new TextDisplayBuilder()
-                    .setContent(`<@&${config.staffRoleId}> - Ticket Baru!`);
-
-                const notifSep = new SeparatorBuilder();
-                const notifContainer = new ContainerBuilder()
-                    .setAccentColor(accentColor)
-                    .addTextDisplayComponents(staffPing)
-                    .addSeparatorComponents(notifSep)
-                    .addSectionComponents(notifTitle)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(ticketDetails)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(staffCount);
-
-                const joinBtn = new ButtonBuilder()
-                    .setCustomId(`ticket_join_${newTicket.id}`)
-                    .setLabel('Join Ticket')
-                    .setStyle(ButtonStyle.Secondary);
-
-                const notifButtonRow = new ActionRowBuilder().addComponents(joinBtn);
+                const { notifContainer, notifButtonRow } = createStaffNotification(type, ticketId, interaction, accentColor, ticketDetails, newTicket.id, false);
 
                 const notifMessage = await staffChannel.send({
                     components: [notifContainer, notifButtonRow],
@@ -283,32 +297,53 @@ Terima kasih atas pengertian dan kerjasamanya! 🙏`);
                 newTicket.staffMembers = [];
                 newTicket.claimedBy = null;
                 newTicket.creatorId = interaction.user.id;
+
+                if (type === 'purchase' && formData) {
+                    newTicket.productName = formData.productName;
+                    newTicket.paymentMethod = formData.paymentMethod;
+                    newTicket.notes = formData.notes;
+                }
+
+                logger.info(`[TICKET] Staff notif sent - Ticket ID: ${ticketId}`);
             }
         } catch (notifErr) {
-            console.error('[TICKETS NOTIF ERROR]', notifErr.message);
+            console.error('[TICKET NOTIF ERROR]', notifErr.message);
         }
 
-        const replyTitle = new TextDisplayBuilder().setContent(`## 🎫 **Ticket**`);
-        const replyDesc = new TextDisplayBuilder().setContent(`Opened a new ticket: <#${newTicket.id}>`);
-        const replySep = new SeparatorBuilder();
-
-        const replyContainer = new ContainerBuilder()
+        // Create ephemeral response dengan format seperti screenshot
+        const ticketTypeDisplay = type === 'purchase' ? '🎫 Ticket' : '❓ Ticket';
+        const ephemeralTitle = new TextDisplayBuilder().setContent(`${ticketTypeDisplay}`);
+        const ephemeralDesc = new TextDisplayBuilder().setContent(`Opened a new ticket: <#${newTicket.id}>`);
+        
+        const viewBtn = new ButtonBuilder()
+            .setLabel('View Ticket')
+            .setStyle(ButtonStyle.Link)
+            .setURL(newTicket.url);
+        
+        const viewButtonRow = new ActionRowBuilder().addComponents(viewBtn);
+        
+        const ephemeralContainer = new ContainerBuilder()
             .setAccentColor(accentColor)
-            .addTextDisplayComponents(replyTitle)
-            .addSeparatorComponents(replySep)
-            .addTextDisplayComponents(replyDesc);
+            .addTextDisplayComponents(ephemeralTitle)
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(ephemeralDesc);
 
         await interaction.editReply({
-            components: [replyContainer],
-            flags: MessageFlags.IsComponentsV2,
+            components: [ephemeralContainer, viewButtonRow],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
 
-        logger.info(`[TICKETS] ✓ Ticket ready: ${newTicket.name}`);
+        logger.info(`[TICKET] ✓ ${type.toUpperCase()} ticket ready: ${newTicket.name}`);
+        } finally {
+            // Auto-unlock is handled by setTimeout above
+            logger.debug(`[TICKET] Ticket creation completed for ${userId}`);
+        }
     } catch (error) {
-        console.error('[TICKETS ERROR]', error.message);
+        console.error('[TICKET ERROR]', error.message);
+        // Auto-unlock is handled by setTimeout, no manual cleanup needed
         try {
             const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+                .setAccentColor(parseInt(config.primaryColor, 16))
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
                 );
@@ -325,9 +360,49 @@ Terima kasih atas pengertian dan kerjasamanya! 🙏`);
                 });
             }
         } catch (replyErr) {
-            console.error('[TICKETS REPLY ERROR]', replyErr.message);
+            console.error('[TICKET REPLY ERROR]', replyErr.message);
         }
     }
+};
+
+// ==================== TICKET BUTTON HANDLERS ====================
+
+async function handleTicketPurchaseButton(interaction, client) {
+    const purchaseModal = new ModalBuilder()
+        .setCustomId('purchase_form_modal')
+        .setTitle('Purchase Form');
+
+    const productInput = new TextInputBuilder()
+        .setCustomId('purchase_product')
+        .setLabel('Nama Produk/Item yang ingin Kamu Beli')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    const methodInput = new TextInputBuilder()
+        .setCustomId('purchase_method')
+        .setLabel('Metode Pembayaran')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('QRIS/Bank Jago/Seabank')
+        .setRequired(true);
+
+    const notesInput = new TextInputBuilder()
+        .setCustomId('purchase_notes')
+        .setLabel('Catatan')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Ada request khusus? Tulis disini!')
+        .setRequired(false);
+
+    const row1 = new ActionRowBuilder().addComponents(productInput);
+    const row2 = new ActionRowBuilder().addComponents(methodInput);
+    const row3 = new ActionRowBuilder().addComponents(notesInput);
+
+    purchaseModal.addComponents(row1, row2, row3);
+    return await interaction.showModal(purchaseModal);
+}
+
+async function handleTicketHelpButton(interaction, client) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await createTicket('help', interaction, client);
 }
 
 async function handleTicketAddButton(interaction, client) {
@@ -341,7 +416,7 @@ async function handleTicketAddButton(interaction, client) {
         .setContent('👥 **Pilih user untuk ditambahkan ke ticket:**');
 
     const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+        .setAccentColor(parseInt(config.primaryColor, 16))
         .addTextDisplayComponents(titleBlock);
 
     await interaction.reply({
@@ -358,10 +433,10 @@ async function handleMiddlemanAddButton(interaction, client) {
     const selectRow = new ActionRowBuilder().addComponents(userSelect);
 
     const titleBlock = new TextDisplayBuilder()
-        .setContent('👥 **Pilih pembeli atau penjual untuk ditambahkan ke request:**');
+        .setContent('👥 **Choose buyer/seller to add to the ticket:**');
 
     const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+        .setAccentColor(parseInt(config.primaryColor, 16))
         .addTextDisplayComponents(titleBlock);
 
     await interaction.reply({
@@ -374,16 +449,11 @@ async function handleMiddlemanAddButton(interaction, client) {
 
 async function handleMiddlemanRequestButton(interaction, client) {
     // Check if store is open
-    const status = getStatus();
-    if (status.isOpen === false) {
+    const statusCheck = checkStoreStatus('middleman request');
+    if (!statusCheck.isOpen) {
         logger.debug(`[TICKET] User ${interaction.user.tag} blocked - toko tutup (middleman request)`);
-        const errorBlock = new ContainerBuilder()
-            .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-            .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent('❌ Toko sedang tutup! Tidak bisa membuka middleman request sekarang.')
-            );
         return await interaction.reply({
-            components: [errorBlock],
+            components: [statusCheck.errorBlock],
             flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         });
     }
@@ -424,7 +494,7 @@ async function handleMiddlemanRequestButton(interaction, client) {
         .setContent('# Voxteria - Middleman\n**Pilih Range Transaksi**\n\nSilahkan pilih range transaksi kamu!');
 
     const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+        .setAccentColor(parseInt(config.primaryColor, 16))
         .addTextDisplayComponents(titleBlock);
 
     await interaction.reply({
@@ -433,242 +503,57 @@ async function handleMiddlemanRequestButton(interaction, client) {
     });
 }
 
-async function handleMiddlemanHelpButton(interaction, client) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-    try {
-        // Check status - block if store is closed
-        const status = getStatus();
-        if (status.isOpen === false) {
-            logger.debug(`[TICKET] User ${interaction.user.tag} blocked - toko tutup (middleman help)`);
-            const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Toko sedang tutup! Tidak bisa membuka middleman help sekarang.')
-                );
-            return await interaction.editReply({
-                components: [errorBlock],
-                flags: MessageFlags.IsComponentsV2,
-            });
-        }
-
-        const middlemanChannel = await client.channels.fetch(config.middlemanChannelId);
-
-        if (!middlemanChannel) {
-            const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Channel middleman tidak ditemukan!')
-                );
-            return await interaction.editReply({
-                components: [errorBlock],
-                flags: MessageFlags.IsComponentsV2,
-            });
-        }
-
-        const threadName = `help-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.color.replace('#', ''), 16);
-
-        const title = new TextDisplayBuilder().setContent('# Middleman System - Help');
-        const description = new TextDisplayBuilder().setContent(`Terima kasih sudah membuat request middleman.
-Silahkan tuliskan kebutuhan kamu dengan jelas agar tim kami bisa membantu lebih cepat!
-
-## 🚫 **Catatan:**
-• Mohon gunakan request ini sesuai kebutuhan middleman/rekber.
-• Hindari membuka request hanya untuk iseng, karena bisa berakibat blacklist.
-• Jika request kamu tidak direspon dalam waktu yang lama, silahkan tag staff yang bertugas.
-
-Terima kasih atas pengertian dan kerjasamanya! 🙏`);
-
-        const userInfo = new TextDisplayBuilder()
-            .setContent(`**User:** ${interaction.user.tag}\n**Created:** <t:${Math.floor(Date.now() / 1000)}:f>`);
-
-        const sep = new SeparatorBuilder();
-
-        const container = new ContainerBuilder()
-            .setAccentColor(accentColor)
-            .addTextDisplayComponents(title)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(description)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(userInfo);
-
-        const closeBtn = new ButtonBuilder()
-            .setCustomId('middleman_close')
-            .setLabel('Close Request')
-            .setStyle(ButtonStyle.Danger);
-
-        const claimBtn = new ButtonBuilder()
-            .setCustomId('middleman_claim')
-            .setLabel('Claim Request')
-            .setStyle(ButtonStyle.Primary);
-
-        const addMemberBtn = new ButtonBuilder()
-            .setCustomId('middleman_add')
-            .setLabel('Add Member')
-            .setStyle(ButtonStyle.Secondary);
-
-        const buttonRow = new ActionRowBuilder()
-            .addComponents(closeBtn, claimBtn, addMemberBtn);
-
-        const newRequest = await middlemanChannel.threads.create({
-            name: threadName,
-            autoArchiveDuration: 10080,
-            reason: `Middleman request created by ${interaction.user.tag}`,
-            type: ChannelType.PrivateThread,
-        });
-
-        await newRequest.send({
-            components: [container, buttonRow],
-            flags: MessageFlags.IsComponentsV2,
-        });
-
-        // Send form template
-        try {
-            await newRequest.send({
-                content: `## 📋 **Form Middleman**
-
-Silahkan isi form di bawah ini:
-
-\`\`\`
-Penjual : 
-Pembeli : 
-Jenis Barang yang Dijual : 
-Harga Barang yang Dijual : Rp. 
-Inc/Ex :
-\`\`\`
-
-**Catatan:**
-• Inc = Harga sudah termasuk biaya middleman
-• Ex = Harga belum termasuk biaya middleman`
-            });
-            logger.info('[FORM] ✓ Form sent successfully to help button thread');
-        } catch (formErr) {
-            console.error('[FORM ERROR - HELP BUTTON]', formErr);
-        }
-
-        await newRequest.members.add(interaction.user.id);
-
-        // Send staff notification
-        try {
-            const staffChannel = await client.channels.fetch(config.notificationChannelId);
-            if (staffChannel) {
-                const requestId = `MID-${interaction.guild.name.substring(0, 3).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-                const userAvatar = interaction.user.displayAvatarURL({ size: 256, dynamic: true });
-
-                const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
-                const notifTitle = new SectionBuilder()
-                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## **🤝 Middleman Ticket**\n\n**A Middleman Ticket is Opened!**`))
-                    .setThumbnailAccessory(thumbnail);
-
-                const requestDetails = new TextDisplayBuilder()
-                    .setContent(`• **Request ID:** ${requestId}\n• **Type:** Middleman\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet`);
-
-                const staffCount = new TextDisplayBuilder()
-                    .setContent(`• **Staff in Request:** 0\n• **Staff Members:** None`);
-
-                const notifSep = new SeparatorBuilder();
-                const notifContainer = new ContainerBuilder()
-                    .setAccentColor(accentColor)
-                    .addSectionComponents(notifTitle)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(requestDetails)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(staffCount);
-
-                const joinBtn = new ButtonBuilder()
-                    .setCustomId(`middleman_join_${newRequest.id}`)
-                    .setLabel('Join Request')
-                    .setStyle(ButtonStyle.Secondary);
-
-                const notifButtonRow = new ActionRowBuilder().addComponents(joinBtn);
-
-                const notifMessage = await staffChannel.send({
-                    content: `<@&${config.staffRoleId}>`,
-                    components: [notifContainer, notifButtonRow],
-                });
-
-                newRequest.requestId = requestId;
-                newRequest.notifMessageId = notifMessage.id;
-                newRequest.staffMembers = [];
-                newRequest.claimedBy = null;
-                newRequest.creatorId = interaction.user.id;
-
-                logger.info(`[MIDDLEMAN] Notifikasi sent to staff channel - Request ID: ${requestId}`);
-            }
-        } catch (notifErr) {
-            console.error('[MIDDLEMAN NOTIF ERROR]', notifErr.message);
-        }
-
-        const replyTitle = new TextDisplayBuilder().setContent(`## 🤝 **Middleman Ticket**`);
-        const replyDesc = new TextDisplayBuilder().setContent(`Opened a new middleman ticket: <#${newRequest.id}>`);
-        const replySep = new SeparatorBuilder();
-
-        const replyContainer = new ContainerBuilder()
-            .setAccentColor(accentColor)
-            .addTextDisplayComponents(replyTitle)
-            .addSeparatorComponents(replySep)
-            .addTextDisplayComponents(replyDesc);
-
-        await interaction.editReply({
-            components: [replyContainer],
-            flags: MessageFlags.IsComponentsV2,
-        });
-
-        logger.info(`[MIDDLEMAN] ✓ Request ready: ${newRequest.name}`);
-    } catch (error) {
-        console.error('[MIDDLEMAN ERROR]', error.message);
-        try {
-            const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
-                );
-            
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply({
-                    components: [errorBlock],
-                    flags: MessageFlags.IsComponentsV2,
-                });
-            } else {
-                await interaction.reply({
-                    components: [errorBlock],
-                    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-                });
-            }
-        } catch (replyErr) {
-            console.error('[MIDDLEMAN REPLY ERROR]', replyErr.message);
-        }
-    }
-}
-
 // ==================== MIDDLEMAN MODAL HANDLER ====================
 
 async function handleMiddlemanRequestModal(interaction, client) {
+    const lockKey = `${interaction.user.id}_middleman`;
+    const lockValue = Date.now(); // Unique value untuk setiap attempt
+    
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-        const middlemanChannel = await client.channels.fetch(config.middlemanChannelId);
-
-        if (!middlemanChannel) {
-            const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Channel middleman tidak ditemukan!')
-                );
-            return await interaction.editReply({
-                components: [errorBlock],
-                flags: MessageFlags.IsComponentsV2,
-            });
+        // ATOMIC check-and-set
+        if (ticketCreationLocks.has(lockKey)) {
+            const existingTime = ticketCreationLocks.get(lockKey);
+            logger.warn(`[MIDDLEMAN] ⛔ BLOCKED - Concurrent creation for ${interaction.user.tag}. Existing lock: ${existingTime}, New attempt: ${lockValue}`);
+            return;
         }
+        
+        // ATOMIC SET
+        ticketCreationLocks.set(lockKey, lockValue);
+        logger.debug(`[MIDDLEMAN] ✓ LOCK ACQUIRED for ${lockKey} (value: ${lockValue})`);
+        
+        // Auto-cleanup after 20 seconds
+        setTimeout(() => {
+            const currentValue = ticketCreationLocks.get(lockKey);
+            if (currentValue === lockValue) {
+                ticketCreationLocks.delete(lockKey);
+                logger.debug(`[MIDDLEMAN] Lock auto-expired for ${lockKey}`);
+            }
+        }, 20000);
+        
+        try {
+            const middlemanChannel = await client.channels.fetch(config.channels.middleman);
 
-        const rangeInput = interaction.fields.getTextInputValue('middleman_range');
-        const notes = interaction.fields.getTextInputValue('middleman_notes') || '-';
+            if (!middlemanChannel) {
+                const errorBlock = new ContainerBuilder()
+                    .setAccentColor(parseInt(config.primaryColor, 16))
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent('❌ Channel middleman tidak ditemukan!')
+                    );
+                return await interaction.editReply({
+                    components: [errorBlock],
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            }
+
+            const rangeInput = interaction.fields.getTextInputValue('middleman_range');
+            const notes = interaction.fields.getTextInputValue('middleman_notes') || '-';
 
         // Validate range input
         if (!['1', '2', '3', '4', '5', '6'].includes(rangeInput.trim())) {
             const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+                .setAccentColor(parseInt(config.primaryColor, 16))
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent('❌ Range transaksi harus 1-6!')
                 );
@@ -688,7 +573,7 @@ async function handleMiddlemanRequestModal(interaction, client) {
         };
 
         const threadName = `midman-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.color.replace('#', ''), 16);
+        const accentColor = parseInt(config.primaryColor, 16);
 
         const title = new TextDisplayBuilder().setContent('# Voxteria - Middleman');
         const description = new TextDisplayBuilder().setContent(`Terima kasih sudah membuat request middleman.
@@ -751,20 +636,25 @@ Terima kasih atas kepercayaan kamu! 🙏`);
 
         // Send form template - MODAL
         try {
+            // Message 1: Header
             await newRequest.send({
-                content: `## 📋 **Form Middleman**
+                content: `## 📋 **Form Middleman**\n\nSilahkan isi form di bawah ini:`
+            });
 
-Silahkan isi form di bawah ini:
-
-\`\`\`
+            // Message 2: Form (easy to copy for mobile)
+            await newRequest.send({
+                content: `\`\`\`
 Penjual : 
 Pembeli : 
 Jenis Barang yang Dijual : 
-Harga Barang yang Dijual : Rp. 
+Harga Barang yang Dijual : Rp. (contoh: Rp. 2.000.000)
 Inc/Ex :
-\`\`\`
+\`\`\``
+            });
 
-**Catatan:**
+            // Message 3: Catatan
+            await newRequest.send({
+                content: `**Catatan:**
 • Inc = Harga sudah termasuk biaya middleman
 • Ex = Harga belum termasuk biaya middleman`
             });
@@ -775,43 +665,20 @@ Inc/Ex :
 
         await newRequest.members.add(interaction.user.id);
 
+        // Generate requestId
+        const requestId = `MID-${interaction.guild.name.substring(0, 3).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
         // Send staff notification
         try {
-            const staffChannel = await client.channels.fetch(config.notificationChannelId);
+            const staffChannel = await client.channels.fetch(config.channels.openedTickets);
             if (staffChannel) {
-                const requestId = `MID-${interaction.guild.name.substring(0, 3).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-                const userAvatar = interaction.user.displayAvatarURL({ size: 256, dynamic: true });
-
-                const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
-                const notifTitle = new SectionBuilder()
-                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## **Join Ticket**\n\n**A Middleman Ticket is Opened!**`))
-                    .setThumbnailAccessory(thumbnail);
-
                 const requestDetails = new TextDisplayBuilder()
-                    .setContent(`• **Request ID:** ${requestId}\n• **Type:** Transaction\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet\n• **Range:** ${rangeMap[rangeInput.trim()]}`);
+                    .setContent(`• **Ticket ID:** ${requestId}\n• **Type:** Transaction\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet\n• **Range:** ${rangeMap[rangeInput.trim()]}`);
 
-                const staffCount = new TextDisplayBuilder()
-                    .setContent(`• **Staff in Request:** 0\n• **Staff Members:** None`);
-
-                const notifSep = new SeparatorBuilder();
-                
-                const notifContainer = new ContainerBuilder()
-                    .setAccentColor(accentColor)
-                    .addSectionComponents(notifTitle)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(requestDetails)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(staffCount);
-
-                const joinBtn = new ButtonBuilder()
-                    .setCustomId(`middleman_join_${newRequest.id}`)
-                    .setLabel('Join Request')
-                    .setStyle(ButtonStyle.Secondary);
-
-                const notifButtonRow = new ActionRowBuilder().addComponents(joinBtn);
+                const { notifContainer, notifButtonRow } = createStaffNotification('middleman', requestId, interaction, accentColor, requestDetails, newRequest.id, true);
 
                 const notifMessage = await staffChannel.send({
-                    content: `<@&${config.staffRoleId}>`,
+                    content: `<@&${config.roles.staff}>`,
                     components: [notifContainer, notifButtonRow],
                 });
 
@@ -829,27 +696,39 @@ Inc/Ex :
             console.error('[MIDDLEMAN NOTIF ERROR]', notifErr.message);
         }
 
-        const replyTitle = new TextDisplayBuilder().setContent(`## 🤝 Voxteria - Middleman`);
-        const replyDesc = new TextDisplayBuilder().setContent(`Ticket kamu sudah dibuat: <#${newRequest.id}>\n\nTunggu staff kami untuk mengklaim dan memproses request kamu.`);
-        const replySep = new SeparatorBuilder();
-
-        const replyContainer = new ContainerBuilder()
+        // Create ephemeral response dengan format seperti screenshot
+        const ephemeralTitle = new TextDisplayBuilder().setContent(`## Voxteria - Ticket System`);
+        const ephemeralDesc = new TextDisplayBuilder().setContent(`✅ Your ticket has been opened!\n\n[Click here to see your ticket](${newRequest.url})`);
+        
+        const ephemeralContainer = new ContainerBuilder()
             .setAccentColor(accentColor)
-            .addTextDisplayComponents(replyTitle)
-            .addSeparatorComponents(replySep)
-            .addTextDisplayComponents(replyDesc);
+            .addTextDisplayComponents(ephemeralTitle)
+            .addTextDisplayComponents(ephemeralDesc);
 
         await interaction.editReply({
-            components: [replyContainer],
-            flags: MessageFlags.IsComponentsV2,
+            components: [ephemeralContainer],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
 
         logger.info(`[MIDDLEMAN] ✓ Request ready: ${newRequest.name}`);
+        } finally {
+            // Clean up lock (only if ours)
+            const currentValue = ticketCreationLocks.get(lockKey);
+            if (currentValue === lockValue) {
+                ticketCreationLocks.delete(lockKey);
+                logger.debug(`[MIDDLEMAN] Lock released for ${lockKey}`);
+            }
+        }
     } catch (error) {
         console.error('[MIDDLEMAN ERROR]', error.message);
+        // Cleanup on error
+        const currentValue = ticketCreationLocks.get(lockKey);
+        if (currentValue === lockValue) {
+            ticketCreationLocks.delete(lockKey);
+        }
         try {
             const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+                .setAccentColor(parseInt(config.primaryColor, 16))
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
                 );
@@ -873,180 +752,113 @@ Inc/Ex :
 
 // ==================== TICKET MODAL HANDLER ====================
 
+// Get payment details by method
+const getPaymentDetails = (method) => {
+    const paymentsFile = path.join(__dirname, '../config/payments.json');
+    try {
+        const payments = JSON.parse(fs.readFileSync(paymentsFile, 'utf8'));
+        const methodLowercase = method.toLowerCase().trim();
+        
+        // Check lokal methods
+        if (methodLowercase === 'bank jago' || methodLowercase === 'jago') {
+            return { type: 'bank', name: 'Bank Jago', norek: payments.lokal?.jago?.norek };
+        }
+        if (methodLowercase === 'seabank') {
+            return { type: 'bank', name: 'Seabank', norek: payments.lokal?.seabank?.norek };
+        }
+        if (methodLowercase === 'bca') {
+            return { type: 'bank', name: 'BCA', norek: payments.lokal?.bca?.norek };
+        }
+        if (methodLowercase === 'qris') {
+            return { type: 'qris', name: 'QRIS', imageUrl: payments.lokal?.qris?.imageUrl };
+        }
+        
+        // Check international methods
+        if (methodLowercase === 'paypal') {
+            return { type: 'email', name: 'PayPal', email: payments.internasional?.paypal?.email };
+        }
+        if (methodLowercase === 'bitcoin' || methodLowercase === 'btc') {
+            return { type: 'wallet', name: 'Bitcoin', wallet: payments.internasional?.crypto?.btc };
+        }
+        if (methodLowercase === 'ethereum' || methodLowercase === 'eth') {
+            return { type: 'wallet', name: 'Ethereum', wallet: payments.internasional?.crypto?.ethereum_erc20 };
+        }
+        if (methodLowercase === 'usdt') {
+            return { type: 'wallet', name: 'USDT (ERC20)', wallet: payments.internasional?.crypto?.usdt_erc20 };
+        }
+        if (methodLowercase === 'binance') {
+            return { type: 'binance', name: 'Binance', id: payments.internasional?.binance?.id, qrUrl: payments.internasional?.binance?.qrUrl };
+        }
+        
+        return null;
+    } catch (err) {
+        console.error('[PAYMENT DETAILS ERROR]', err.message);
+        return null;
+    }
+};
+
+// Get QRIS details
+const getQrisDetails = () => {
+    const paymentsFile = path.join(__dirname, '../config/payments.json');
+    try {
+        const payments = JSON.parse(fs.readFileSync(paymentsFile, 'utf8'));
+        return payments.lokal?.qris;
+    } catch (err) {
+        console.error('[QRIS ERROR]', err.message);
+        return null;
+    }
+};
+
 async function handlePurchaseFormModal(interaction, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-        const ticketChannel = await client.channels.fetch(config.ticketChannelId);
+        const productName = interaction.fields.getTextInputValue('purchase_product');
+        const paymentMethod = interaction.fields.getTextInputValue('purchase_method');
+        const notes = interaction.fields.getTextInputValue('purchase_notes') || '-';
+        const accentColor = parseInt(config.primaryColor, 16);
 
-        if (!ticketChannel) {
-            const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('❌ Channel ticket tidak ditemukan!')
-                );
+        // Get payment details
+        const paymentDetails = getPaymentDetails(paymentMethod);
+
+        if (!paymentDetails) {
+            // Payment method not available - show QRIS only
+            const qris = getQrisDetails();
+
+            const warningText = new TextDisplayBuilder()
+                .setContent(`❌ **${paymentMethod}** sedang tidak tersedia.\n\nGunakan **QRIS** untuk pembayaran:`);
+
+            const qrisSection = new TextDisplayBuilder()
+                .setContent(`Scan QR Code di bawah untuk melakukan pembayaran.`);
+
+            const container = new ContainerBuilder()
+                .setAccentColor(accentColor)
+                .addTextDisplayComponents(warningText)
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(qrisSection);
+
+            // Add QRIS image if available
+            if (qris?.imageUrl) {
+                const { MediaGalleryBuilder, MediaGalleryItemBuilder } = require('@discordjs/builders');
+                const mediaGallery = new MediaGalleryBuilder()
+                    .addItems(new MediaGalleryItemBuilder().setURL(qris.imageUrl));
+                container.addMediaGalleryComponents(mediaGallery);
+            }
+
             return await interaction.editReply({
-                components: [errorBlock],
+                components: [container],
                 flags: MessageFlags.IsComponentsV2,
             });
         }
 
-        const productName = interaction.fields.getTextInputValue('purchase_product');
-        const paymentMethod = interaction.fields.getTextInputValue('purchase_method');
-        const notes = interaction.fields.getTextInputValue('purchase_notes') || '-';
-
-        const threadName = `purchase-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.color.replace('#', ''), 16);
-
-        const title = new TextDisplayBuilder()
-            .setContent('# Tickets System - Purchase');
-
-        const description = new TextDisplayBuilder()
-            .setContent(`Terima kasih sudah membuat ticket.
-Silahkan tuliskan kebutuhan kamu dengan jelas agar tim kami bisa membantu lebih cepat!
-
-## 🚫 **Catatan:**
-• Mohon gunakan ticket ini sesuai kebutuhan (order, bantuan, atau midman).
-• Hindari membuka ticket hanya untuk iseng, karena bisa berakibat blacklist.
-• Jika kamu sudah menuliskan detail, harap tunggu respon dari tim kami.
-
-Terima kasih atas pengertian dan kerjasamanya! 🙏`);
-
-        const purchaseInfo = new TextDisplayBuilder()
-            .setContent(`**Produk:** ${productName}\n**Metode Pembayaran:** ${paymentMethod}\n**Catatan:** ${notes}`);
-
-        const userInfo = new TextDisplayBuilder()
-            .setContent(`**User:** ${interaction.user.tag}\n**Created:** <t:${Math.floor(Date.now() / 1000)}:f>`);
-
-        const sep = new SeparatorBuilder();
-
-        const container = new ContainerBuilder()
-            .setAccentColor(accentColor)
-            .addTextDisplayComponents(title)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(description)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(purchaseInfo)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(userInfo);
-
-        const closeBtn = new ButtonBuilder()
-            .setCustomId('ticket_close')
-            .setLabel('Close Ticket')
-            .setStyle(ButtonStyle.Danger);
-
-        const claimBtn = new ButtonBuilder()
-            .setCustomId('ticket_claim')
-            .setLabel('Claim Ticket')
-            .setStyle(ButtonStyle.Primary);
-
-        const addMemberBtn = new ButtonBuilder()
-            .setCustomId('ticket_add')
-            .setLabel('Add Member')
-            .setStyle(ButtonStyle.Secondary);
-
-        const buttonRow = new ActionRowBuilder()
-            .addComponents(closeBtn, claimBtn, addMemberBtn);
-
-        const newTicket = await ticketChannel.threads.create({
-            name: threadName,
-            autoArchiveDuration: 10080,
-            reason: `Ticket created by ${interaction.user.tag}`,
-            type: ChannelType.PrivateThread,
-        });
-
-        await newTicket.members.add(interaction.user.id);
-        await newTicket.send({
-            components: [container, buttonRow],
-            flags: MessageFlags.IsComponentsV2,
-        });
-
-        // Send staff notification
-        try {
-            const staffChannel = await client.channels.fetch(config.notificationChannelId);
-            if (staffChannel) {
-                const ticketId = `${interaction.guild.name.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-                const userAvatar = interaction.user.displayAvatarURL({ size: 256, dynamic: true });
-
-                const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
-                const notifTitle = new SectionBuilder()
-                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## **🎫 Join Ticket**\n\n**A Purchase Ticket is Opened!**`))
-                    .setThumbnailAccessory(thumbnail);
-
-                const basicInfo = new TextDisplayBuilder()
-                    .setContent(`• **Ticket ID:** ${ticketId}\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet`);
-
-                const productDetails = new TextDisplayBuilder()
-                    .setContent(`**Product:** ${productName}\n**Payment Method:** ${paymentMethod}\n**Description:** ${notes}`);
-
-                const staffCount = new TextDisplayBuilder()
-                    .setContent(`• **Staff in Ticket:** 0\n• **Staff Members:** None`);
-
-                const staffPing = new TextDisplayBuilder()
-                    .setContent(`<@&${config.staffRoleId}> - Ticket Baru!`);
-
-                const notifSep = new SeparatorBuilder();
-
-                const notifContainer = new ContainerBuilder()
-                    .setAccentColor(accentColor)
-                    .addTextDisplayComponents(staffPing)
-                    .addSeparatorComponents(notifSep)
-                    .addSectionComponents(notifTitle)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(basicInfo)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(productDetails)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(staffCount);
-
-                const joinBtn = new ButtonBuilder()
-                    .setCustomId(`ticket_join_${newTicket.id}`)
-                    .setLabel('Join Ticket')
-                    .setStyle(ButtonStyle.Secondary);
-
-                const notifButtonRow = new ActionRowBuilder().addComponents(joinBtn);
-
-                const notifMessage = await staffChannel.send({
-                    components: [notifContainer, notifButtonRow],
-                    flags: MessageFlags.IsComponentsV2,
-                });
-
-                newTicket.ticketId = ticketId;
-                newTicket.notifMessageId = notifMessage.id;
-                newTicket.staffMembers = [];
-                newTicket.claimedBy = null;
-                newTicket.creatorId = interaction.user.id;
-                newTicket.productName = productName;
-                newTicket.paymentMethod = paymentMethod;
-                newTicket.notes = notes;
-
-                logger.info(`[TICKETS] Notifikasi sent to staff channel - Ticket ID: ${ticketId}`);
-            }
-        } catch (notifErr) {
-            console.error('[TICKETS NOTIF ERROR]', notifErr.message);
-        }
-
-        const replyTitle = new TextDisplayBuilder().setContent(`## 🎫 **Ticket**`);
-        const replyDesc = new TextDisplayBuilder().setContent(`Opened a new ticket: <#${newTicket.id}>`);
-        const replySep = new SeparatorBuilder();
-
-        const replyContainer = new ContainerBuilder()
-            .setAccentColor(accentColor)
-            .addTextDisplayComponents(replyTitle)
-            .addSeparatorComponents(replySep)
-            .addTextDisplayComponents(replyDesc);
-
-        await interaction.editReply({
-            components: [replyContainer],
-            flags: MessageFlags.IsComponentsV2,
-        });
-
-        logger.info(`[TICKETS] ✓ Ticket ready: ${newTicket.name}`);
+        // Payment method is available - create purchase ticket
+        const formData = { productName, paymentMethod, notes };
+        await createTicket('purchase', interaction, client, formData);
     } catch (error) {
-        console.error('[TICKETS ERROR]', error.message);
+        console.error('[PURCHASE ERROR]', error.message);
         try {
             const errorBlock = new ContainerBuilder()
-                .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+                .setAccentColor(parseInt(config.primaryColor, 16))
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
                 );
@@ -1063,7 +875,7 @@ Terima kasih atas pengertian dan kerjasamanya! 🙏`);
                 });
             }
         } catch (replyErr) {
-            console.error('[TICKETS REPLY ERROR]', replyErr.message);
+            console.error('[PURCHASE REPLY ERROR]', replyErr.message);
         }
     }
 }
@@ -1076,9 +888,6 @@ module.exports = {
     handleTicketAddButton,
     handlePurchaseFormModal,
     handleMiddlemanRequestButton,
-    handleMiddlemanHelpButton,
     handleMiddlemanAddButton,
     handleMiddlemanRequestModal,
 };
-
-

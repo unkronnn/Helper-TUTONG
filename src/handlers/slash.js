@@ -10,11 +10,11 @@ module.exports = async () => {
     let loadedCommands = [];
     let skippedCommands = [];
 
-    fs.readdirSync('./src/slashCommands/').forEach(dir => {
-        const commands = fs.readdirSync(`./src/slashCommands/${dir}`).filter(file => file.endsWith('.js'));
+    fs.readdirSync('./src/commands/').forEach(dir => {
+        const commands = fs.readdirSync(`./src/commands/${dir}`).filter(file => file.endsWith('.js'));
 
         for (let file of commands) {
-            const commandModule = require(`../slashCommands/${dir}/${file}`);
+            const commandModule = require(`../commands/${dir}/${file}`);
 
             if (commandModule.data && commandModule.data instanceof SlashCommandBuilder) {
                 slash.push(commandModule.data.toJSON());

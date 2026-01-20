@@ -1,17 +1,25 @@
 {
-    "color": "20B2AA",
-
-    "staffRoleId": "1413110397384396952",
-    "buyerRoleId": "1408945546319892490",
-    "memberRoleId": "1408945488333635725",
-
-    "ticketChannelId": "1458824954417123520",   
-    "middlemanChannelId": "1410638043580338246",
-    "notificationChannelId": "1435337246214717612",
-    "testimonialChannelId": "1409205928107966586",
-    "midmanLogsChannelId": "1434532821430702152",
-    "announcementChannelId": "1449237015790096474",
-    "statusVoiceChannelId": "1459641985437798632",
-
-    "serverStatsCategoryId": "1458646750867882116"
+    "primaryColor": "20B2AA",
+    
+    "roles": {
+        "staff": "1413110397384396952",
+        "buyer": "1408945546319892490",
+        "member": "1408945488333635725"
+    },
+    
+    "channels": {
+        "tickets": "1458824954417123520",
+        "middleman": "1410638043580338246",
+        "openedTickets": "1435337246214717612",
+        "transcripts": "1408945335220437063",
+        "testimonialsGeneral": "1409205928107966586",
+        "testimonialsJoki": "1455404858520768592",
+        "logsMiddleman": "1434532821430702152",
+        "announcements": "1449237015790096474",
+        "statusVoice": "1459641985437798632"
+    },
+    
+    "categories": {
+        "serverStats": "1458646750867882116"
+    }
 }
