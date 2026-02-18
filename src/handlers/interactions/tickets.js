@@ -1,4 +1,4 @@
-const { MessageFlags, TextDisplayBuilder, ContainerBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, SeparatorBuilder, ThumbnailBuilder, SectionBuilder } = require('discord.js');
+const { MessageFlags, TextDisplayBuilder, ContainerBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, SeparatorBuilder, SeparatorSpacingSize, SectionBuilder, ThumbnailBuilder, EmbedBuilder } = require('discord.js');
 const config = require('../../config/config.json');
 const {
     handleTicketPurchaseButton,
@@ -6,6 +6,8 @@ const {
     handleTicketAddButton,
     handleMiddlemanRequestButton,
     handleMiddlemanAddButton,
+    createMiddlemanTicketMessage,
+    createStaffNotification,
 } = require('../ticketHandler');
 
 async function handleTicketInteractions(client, interaction) {
@@ -53,6 +55,8 @@ async function handleTicketInteractions(client, interaction) {
         if (interaction.customId.startsWith('middleman_user_select_')) {
             return await handleMiddlemanUserSelect(interaction, client);
         }
+
+
 
         // Handle user select menus (add member)
         if (interaction.customId === 'ticket_add_user') {
@@ -114,6 +118,14 @@ async function handleTicketClaim(interaction, client) {
     if (thread && thread.isThread()) {
         thread.claimedBy = interaction.user.id;
 
+        // Add to staffMembers list if not already there
+        if (!thread.staffMembers) {
+            thread.staffMembers = [];
+        }
+        if (!thread.staffMembers.includes(interaction.user.id)) {
+            thread.staffMembers.push(interaction.user.id);
+        }
+
         // Update notification di staff channel
         try {
             const staffChannel = await client.channels.fetch(config.channels.openedTickets);
@@ -121,34 +133,52 @@ async function handleTicketClaim(interaction, client) {
                 const notifMessage = await staffChannel.messages.fetch(thread.notifMessageId).catch(() => null);
                 
                 if (notifMessage) {
-                    // Build staff members list
-                    let staffMembersList = '';
-                    if (thread.staffMembers && thread.staffMembers.length > 0) {
-                        staffMembersList = thread.staffMembers.map(id => `<@${id}>`).join(', ');
-                    } else {
-                        staffMembersList = 'None';
+                    // Get creator user for avatar
+                    const creatorId = thread.creatorId;
+                    const creatorUser = await interaction.guild.members.fetch(creatorId).catch(() => null);
+                    const userAvatar = creatorUser?.user.displayAvatarURL({ size: 256, dynamic: true });
+                    
+                    // Determine ticket type from thread name
+                    const ticketType = thread.name?.split('-')[0] || 'help';
+                    
+                    // Build additional data
+                    const additionalData = {
+                        userAvatar: userAvatar || ''
+                    };
+
+                    // Add product details if this is a purchase or help ticket
+                    if ((ticketType === 'purchase' || ticketType === 'help') && thread.productName && thread.paymentMethod) {
+                        additionalData.productName = thread.productName;
+                        additionalData.paymentMethod = thread.paymentMethod;
+                        additionalData.notes = thread.notes || '-';
                     }
 
-                    const staffCountText = `${thread.staffMembers?.length || 0}`;
-                    const claimedByText = thread.claimedBy ? `<@${thread.claimedBy}>` : 'Not claimed yet';
+                    // Add middleman details if applicable
+                    if (ticketType === 'midman' && thread.range) {
+                        additionalData.buyerSeller = '-';
+                        additionalData.range = thread.range;
+                    }
 
-                    const updatedContainer = new ContainerBuilder()
-                        .setAccentColor(parseInt(config.primaryColor, 16))
-                        .addTextDisplayComponents(
-                            new TextDisplayBuilder().setContent(`## 🎫 Join Ticket\n\n**A Ticket is Opened!**`)
-                        )
-                        .addSeparatorComponents(new SeparatorBuilder())
-                        .addTextDisplayComponents(
-                            new TextDisplayBuilder().setContent(`• **Claimed by:** ${claimedByText}\n• **Staff in Ticket:** ${staffCountText}\n• **Staff Members:** ${staffMembersList}`)
-                        );
+                    // Rebuild notification using createStaffNotification
+                    const { notifContainer } = createStaffNotification(
+                        ticketType,
+                        thread.ticketId || 'N/A',
+                        creatorId || 'Unknown',
+                        parseInt(config.primaryColor, 16),
+                        thread.id,
+                        ticketType === 'midman',
+                        thread.staffMembers || [],
+                        thread.claimedBy || null,
+                        additionalData
+                    );
 
-                    await notifMessage.edit({ components: [updatedContainer] }).catch(err => {
-                        console.error('[EDIT NOTIF ERROR]', err.message);
+                    await notifMessage.edit({ components: [notifContainer] }).catch(err => {
+                        console.error('[EDIT NOTIF ERROR CLAIM]', err.message);
                     });
                 }
             }
         } catch (updateErr) {
-            console.error('[UPDATE NOTIF ERROR]', updateErr.message);
+            console.error('[UPDATE NOTIF ERROR CLAIM]', updateErr.message);
         }
     }
 
@@ -214,6 +244,14 @@ async function handleMiddlemanClaim(interaction, client) {
     if (request && request.isThread()) {
         request.claimedBy = interaction.user.id;
 
+        // Add to staffMembers list if not already there
+        if (!request.staffMembers) {
+            request.staffMembers = [];
+        }
+        if (!request.staffMembers.includes(interaction.user.id)) {
+            request.staffMembers.push(interaction.user.id);
+        }
+
         // Update notification di staff channel
         try {
             const staffChannel = await client.channels.fetch(config.channels.openedTickets);
@@ -221,34 +259,38 @@ async function handleMiddlemanClaim(interaction, client) {
                 const notifMessage = await staffChannel.messages.fetch(request.notifMessageId).catch(() => null);
                 
                 if (notifMessage) {
-                    // Build staff members list
-                    let staffMembersList = '';
-                    if (request.staffMembers && request.staffMembers.length > 0) {
-                        staffMembersList = request.staffMembers.map(id => `<@${id}>`).join(', ');
-                    } else {
-                        staffMembersList = 'None';
-                    }
+                    // Get creator user for avatar
+                    const creatorId = request.creatorId;
+                    const creatorUser = await interaction.guild.members.fetch(creatorId).catch(() => null);
+                    const userAvatar = creatorUser?.user.displayAvatarURL({ size: 256, dynamic: true });
+                    
+                    // Build additional data for middleman
+                    const additionalData = {
+                        userAvatar: userAvatar || '',
+                        buyerSeller: '-',
+                        range: request.range || 'Unknown'
+                    };
 
-                    const staffCountText = `${request.staffMembers?.length || 0}`;
-                    const claimedByText = request.claimedBy ? `<@${request.claimedBy}>` : 'Not claimed yet';
+                    // Rebuild notification using createStaffNotification
+                    const { notifContainer } = createStaffNotification(
+                        'middleman',
+                        request.ticketId || 'N/A',
+                        creatorId || 'Unknown',
+                        parseInt(config.primaryColor, 16),
+                        request.id,
+                        true,
+                        request.staffMembers || [],
+                        request.claimedBy || null,
+                        additionalData
+                    );
 
-                    const updatedContainer = new ContainerBuilder()
-                        .setAccentColor(parseInt(config.primaryColor, 16))
-                        .addTextDisplayComponents(
-                            new TextDisplayBuilder().setContent(`## 🎫 Join Ticket\n\n**A Middleman Ticket is Opened!**`)
-                        )
-                        .addSeparatorComponents(new SeparatorBuilder())
-                        .addTextDisplayComponents(
-                            new TextDisplayBuilder().setContent(`• **Claimed by:** ${claimedByText}\n• **Staff in Request:** ${staffCountText}\n• **Staff Members:** ${staffMembersList}`)
-                        );
-
-                    await notifMessage.edit({ components: [updatedContainer] }).catch(err => {
-                        console.error('[EDIT NOTIF ERROR]', err.message);
+                    await notifMessage.edit({ components: [notifContainer] }).catch(err => {
+                        console.error('[EDIT NOTIF ERROR MIDDLEMAN CLAIM]', err.message);
                     });
                 }
             }
         } catch (updateErr) {
-            console.error('[UPDATE NOTIF ERROR]', updateErr.message);
+            console.error('[UPDATE NOTIF ERROR MIDDLEMAN CLAIM]', updateErr.message);
         }
     }
 
@@ -336,7 +378,62 @@ async function handleTicketJoin(interaction, client) {
             thread.staffMembers.push(interaction.user.id);
         }
 
-        const successBlock = new ContainerBuilder()
+        // Update notification di staff channel
+        try {
+            const staffChannel = await client.channels.fetch(config.channels.openedTickets);
+            if (staffChannel && thread.notifMessageId) {
+                const notifMessage = await staffChannel.messages.fetch(thread.notifMessageId).catch(() => null);
+                
+                if (notifMessage) {
+                    // Get creator user for avatar
+                    const creatorId = thread.creatorId;
+                    const creatorUser = await interaction.guild.members.fetch(creatorId).catch(() => null);
+                    const userAvatar = creatorUser?.user.displayAvatarURL({ size: 256, dynamic: true });
+                    
+                    // Determine ticket type from thread name
+                    const ticketType = thread.name?.split('-')[0] || 'help';
+                    
+                    // Build additional data
+                    const additionalData = {
+                        userAvatar: userAvatar || ''
+                    };
+
+                    // Add product details if this is a purchase or help ticket
+                    if ((ticketType === 'purchase' || ticketType === 'help') && thread.productName && thread.paymentMethod) {
+                        additionalData.productName = thread.productName;
+                        additionalData.paymentMethod = thread.paymentMethod;
+                        additionalData.notes = thread.notes || '-';
+                    }
+
+                    // Add middleman details if applicable
+                    if (ticketType === 'midman' && thread.range) {
+                        additionalData.buyerSeller = '-';
+                        additionalData.range = thread.range;
+                    }
+
+                    // Rebuild notification
+                    const { notifContainer } = createStaffNotification(
+                        ticketType,
+                        thread.ticketId || 'N/A',
+                        creatorId || 'Unknown',
+                        parseInt(config.primaryColor, 16),
+                        thread.id,
+                        ticketType === 'midman',
+                        thread.staffMembers || [],
+                        thread.claimedBy || null,
+                        additionalData
+                    );
+
+                    await notifMessage.edit({ components: [notifContainer] }).catch(err => {
+                        console.error('[EDIT NOTIF ERROR JOIN]', err.message);
+                    });
+                }
+            }
+        } catch (updateErr) {
+            console.error('[UPDATE NOTIF ERROR JOIN]', updateErr.message);
+        }
+
+                    const successBlock = new ContainerBuilder()
             .setAccentColor(parseInt(config.primaryColor, 16))
             .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(`✅ <@${interaction.user.id}> has joined the ticket!`)
@@ -395,6 +492,47 @@ async function handleMiddlemanJoin(interaction, client) {
             request.staffMembers.push(interaction.user.id);
         }
 
+        // Update notification di staff channel
+        try {
+            const staffChannel = await client.channels.fetch(config.channels.openedTickets);
+            if (staffChannel && request.notifMessageId) {
+                const notifMessage = await staffChannel.messages.fetch(request.notifMessageId).catch(() => null);
+                
+                if (notifMessage) {
+                    // Get creator user for avatar
+                    const creatorId = request.creatorId;
+                    const creatorUser = await interaction.guild.members.fetch(creatorId).catch(() => null);
+                    const userAvatar = creatorUser?.user.displayAvatarURL({ size: 256, dynamic: true });
+                    
+                    // Build additional data for middleman
+                    const additionalData = {
+                        userAvatar: userAvatar || '',
+                        buyerSeller: '-',
+                        range: request.range || 'Unknown'
+                    };
+
+                    // Rebuild notification using createStaffNotification
+                    const { notifContainer } = createStaffNotification(
+                        'middleman',
+                        request.ticketId || 'N/A',
+                        creatorId || 'Unknown',
+                        parseInt(config.primaryColor, 16),
+                        request.id,
+                        true,
+                        request.staffMembers || [],
+                        request.claimedBy || null,
+                        additionalData
+                    );
+
+                    await notifMessage.edit({ components: [notifContainer] }).catch(err => {
+                        console.error('[EDIT NOTIF ERROR MIDDLEMAN JOIN]', err.message);
+                    });
+                }
+            }
+        } catch (updateErr) {
+            console.error('[UPDATE NOTIF ERROR MIDDLEMAN JOIN]', updateErr.message);
+        }
+
         const successBlock = new ContainerBuilder()
             .setAccentColor(parseInt(config.primaryColor, 16))
             .addTextDisplayComponents(
@@ -434,7 +572,12 @@ async function handleMiddlemanUserSelect(interaction, client) {
         '6': '2% flat'
     };
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    } catch (deferErr) {
+        console.warn(`[MIDDLEMAN USER SELECT] Failed to defer: ${deferErr.message}`);
+        return;
+    }
 
     try {
         const middlemanChannel = await client.channels.fetch(config.channels.middleman);
@@ -454,35 +597,14 @@ async function handleMiddlemanUserSelect(interaction, client) {
         const threadName = `midman-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
         const accentColor = parseInt(config.primaryColor, 16);
 
-        const title = new TextDisplayBuilder().setContent('# Voxteria - Middleman');
-        const description = new TextDisplayBuilder().setContent(`Terima kasih sudah membuat request middleman.
-Silahkan tambahkan pembeli dan penjual lainnya ke thread ini, kemudian tunggu tim staff kami untuk mengkonfirmasi request kamu.
+        const newRequest = await middlemanChannel.threads.create({
+            name: threadName,
+            autoArchiveDuration: 10080,
+            reason: `Middleman request created by ${interaction.user.tag}`,
+            type: ChannelType.PrivateThread,
+        });
 
-## 🚫 **Catatan:**
-• Klik tombol "Add Member" untuk menambahkan pembeli dan penjual.
-• Tim staff akan memverifikasi request kamu.
-• Hindari membuat request bohongan, karena bisa berakibat blacklist.
-
-Terima kasih atas kepercayaan kamu! 🙏`);
-
-        const transactionInfo = new TextDisplayBuilder()
-            .setContent(`**Range Transaksi:** ${rangeMap[rangeValue]}\n**Biaya:** ${feeMap[rangeValue]}`);
-
-        const userInfo = new TextDisplayBuilder()
-            .setContent(`**User:** ${interaction.user.tag}\n**Created:** <t:${Math.floor(Date.now() / 1000)}:f>`);
-
-        const sep = new SeparatorBuilder();
-
-        const container = new ContainerBuilder()
-            .setAccentColor(accentColor)
-            .addTextDisplayComponents(title)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(description)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(transactionInfo)
-            .addSeparatorComponents(sep)
-            .addTextDisplayComponents(userInfo);
-
+        // Create buttons for the ticket
         const closeBtn = new ButtonBuilder()
             .setCustomId('middleman_close')
             .setLabel('Close Ticket')
@@ -498,43 +620,43 @@ Terima kasih atas kepercayaan kamu! 🙏`);
             .setLabel('Add Member')
             .setStyle(ButtonStyle.Secondary);
 
-        const buttonRow = new ActionRowBuilder()
-            .addComponents(closeBtn, claimBtn, addMemberBtn);
+        // Send middleman ticket message using template
+        const { embed1, embed2, embed3 } = createMiddlemanTicketMessage(interaction.user, {
+            rangeTransaction: rangeMap[rangeValue],
+            fee: feeMap[rangeValue],
+            taggedUsers: [interaction.user]
+        }, [closeBtn, claimBtn, addMemberBtn]);
 
-        const newRequest = await middlemanChannel.threads.create({
-            name: threadName,
-            autoArchiveDuration: 10080,
-            reason: `Middleman request created by ${interaction.user.tag}`,
-            type: ChannelType.PrivateThread,
-        });
-
-        await newRequest.send({
-            components: [container, buttonRow],
-            flags: MessageFlags.IsComponentsV2,
-        });
-
-        // Send form template
-        try {
-            await newRequest.send({
-                content: `## 📋 **Form Middleman**
-
-Silahkan isi form di bawah ini:
-
-\`\`\`
-Penjual : 
-Pembeli : 
-Jenis Barang yang Dijual : 
-Harga Barang yang Dijual : Rp. (contoh: Rp. 2.000.000)
-Inc/Ex :
-\`\`\`
-
-**Catatan:**
-• Inc = Harga sudah termasuk biaya middleman
-• Ex = Harga belum termasuk biaya middleman`
-            });
-            console.log('[FORM] ✓ Form sent successfully to user select thread');
-        } catch (formErr) {
-            console.error('[FORM ERROR - USER SELECT]', formErr);
+        if (embed1 && embed2 && embed3) {
+            try {
+                // Send embed 1
+                await newRequest.send({
+                    components: [embed1],
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            } catch (embedErr) {
+                console.warn('[MIDDLEMAN EMBED1 ERROR]', embedErr.message);
+            }
+            
+            try {
+                // Send embed 2
+                await newRequest.send({
+                    components: [embed2],
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            } catch (embedErr) {
+                console.warn('[MIDDLEMAN EMBED2 ERROR]', embedErr.message);
+            }
+            
+            try {
+                // Send embed 3 with buttons
+                await newRequest.send({
+                    components: [embed3],
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            } catch (embedErr) {
+                console.warn('[MIDDLEMAN EMBED3 ERROR]', embedErr.message);
+            }
         }
 
         await newRequest.members.add(interaction.user.id);
@@ -545,83 +667,134 @@ Inc/Ex :
             const staffChannel = await client.channels.fetch(config.channels.openedTickets);
             if (staffChannel) {
                 const requestId = `MID-${interaction.guild.name.substring(0, 3).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
+                // Get user avatar
                 const userAvatar = interaction.user.displayAvatarURL({ size: 256, dynamic: true });
 
-                const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
-                const notifTitle = new SectionBuilder()
-                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## 🎫 Join Ticket\n\n**A Middleman Ticket is Opened!**`))
-                    .setThumbnailAccessory(thumbnail);
+                try {
+                    const notifTitle = new SectionBuilder()
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(`## 🎫 Join Ticket\n\nA new ticket has been opened.\nYou may respond to the ticket if you're available!`)
+                        );
+                    
+                    // Only set thumbnail if avatar URL exists and is valid
+                    if (userAvatar && userAvatar.length > 0) {
+                        try {
+                            const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
+                            notifTitle.setThumbnailAccessory(thumbnail);
+                        } catch (thumbErr) {
+                            console.warn(`[MIDDLEMAN USER SELECT] Failed to create thumbnail: ${thumbErr.message}`);
+                        }
+                    }
 
-                const requestDetails = new TextDisplayBuilder()
-                    .setContent(`• **Ticket ID:** ${requestId}\n• **Type:** Transaction\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet`);
+                    const requestDetails = new TextDisplayBuilder()
+                        .setContent(`• **Ticket ID:** ${requestId}\n• **Type:** Transaction\n• **Opened by:** <@${interaction.user.id}>\n• **Claimed by:** Not claimed yet`);
 
-                const buyerSellerInfo = new TextDisplayBuilder()
-                    .setContent(`• **Buyer/Seller:** <@${selectedUserId}>\n• **Range:** ${rangeMap[rangeValue]}`);
+                    const buyerSellerInfo = new TextDisplayBuilder()
+                        .setContent(`• **Buyer/Seller:** <@${selectedUserId}>\n• **Range:** ${rangeMap[rangeValue]}`);
 
-                const staffCount = new TextDisplayBuilder()
-                    .setContent(`• **Staff in Ticket:** 0\n• **Staff Members:** None`);
+                    const staffCount = new TextDisplayBuilder()
+                        .setContent(`• **Staff in Ticket:** 0\n• **Staff Members:** None`);
 
-                const staffPing = new TextDisplayBuilder()
-                    .setContent(`<@&${config.roles.staff}> - Ticket Baru!`);
+                    const notifSep = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
 
-                const notifSep = new SeparatorBuilder();
+                    const notifContainer = new ContainerBuilder()
+                        .setAccentColor(accentColor)
+                        .addSectionComponents(notifTitle)
+                        .addSeparatorComponents(notifSep)
+                        .addTextDisplayComponents(requestDetails)
+                        .addSeparatorComponents(notifSep)
+                        .addTextDisplayComponents(buyerSellerInfo)
+                        .addSeparatorComponents(notifSep)
+                        .addTextDisplayComponents(staffCount);
 
-                const notifContainer = new ContainerBuilder()
-                    .setAccentColor(accentColor)
-                    .addTextDisplayComponents(staffPing)
-                    .addSeparatorComponents(notifSep)
-                    .addSectionComponents(notifTitle)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(requestDetails)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(buyerSellerInfo)
-                    .addSeparatorComponents(notifSep)
-                    .addTextDisplayComponents(staffCount);
+                    notifContainer.addSeparatorComponents(notifSep);
 
-                const joinBtn = new ButtonBuilder()
-                    .setCustomId(`middleman_join_${newRequest.id}`)
-                    .setLabel('Join Ticket')
-                    .setStyle(ButtonStyle.Secondary);
+                    const joinBtn = new ButtonBuilder()
+                        .setCustomId(`middleman_join_${newRequest.id}`)
+                        .setLabel('Join Ticket')
+                        .setStyle(ButtonStyle.Secondary);
 
-                const notifButtonRow = new ActionRowBuilder().addComponents(joinBtn);
+                    const buttonRow = new ActionRowBuilder().addComponents(joinBtn);
+                    notifContainer.addActionRowComponents(buttonRow);
 
-                const notifMessage = await staffChannel.send({
-                    components: [notifContainer, notifButtonRow],
-                    flags: MessageFlags.IsComponentsV2,
-                });
+                    // Send staff mention message
+                    const staffMentionMessage = await staffChannel.send(`<@&${config.roles.staff}>`);
 
-                newRequest.requestId = requestId;
-                newRequest.notifMessageId = notifMessage.id;
-                newRequest.staffMembers = [];
-                newRequest.claimedBy = null;
-                newRequest.creatorId = interaction.user.id;
-                newRequest.range = rangeMap[rangeValue];
-                newRequest.buyerSellerId = selectedUserId;
+                    // Don't send content field with IsComponentsV2, staff mention is inside the container
+                    const notifMessage = await staffChannel.send({
+                        components: [notifContainer],
+                        flags: MessageFlags.IsComponentsV2,
+                    });
 
-                console.log(`[MIDDLEMAN] Notifikasi sent to staff channel - Request ID: ${requestId}`);
+                    newRequest.requestId = requestId;
+                    newRequest.staffMentionMessageId = staffMentionMessage.id;
+                    newRequest.notifMessageId = notifMessage.id;
+                    newRequest.staffMembers = [];
+                    newRequest.claimedBy = null;
+                    newRequest.creatorId = interaction.user.id;
+                    newRequest.range = rangeMap[rangeValue];
+                    newRequest.buyerSellerId = selectedUserId;
+
+                    console.log(`[MIDDLEMAN] Notifikasi sent to staff channel - Request ID: ${requestId}`);
+                } catch (containerErr) {
+                    console.error('[MIDDLEMAN NOTIF CONTAINER ERROR]', containerErr);
+                }
             }
         } catch (notifErr) {
             console.error('[MIDDLEMAN NOTIF ERROR]', notifErr.message);
         }
 
-        const replyTitle = new TextDisplayBuilder().setContent(`## 🤝 Voxteria - Middleman`);
-        const replyDesc = new TextDisplayBuilder().setContent(`Ticket kamu sudah dibuat: <#${newRequest.id}>\n\n✅ <@${selectedUserId}> telah ditambahkan ke thread.\n\nTambahkan pembeli/penjual lainnya dengan tombol "Add Member" jika diperlukan, lalu tunggu staff kami untuk mengklaim request kamu.`);
-        const replySep = new SeparatorBuilder();
+        try {
+            const accentColor = parseInt(config.primaryColor, 16);
+            
+            // Create response with separator
+            const titleSection = new TextDisplayBuilder()
+                .setContent(`# HAJI UTONG - Middleman`);
+            
+            const separator = new SeparatorBuilder()
+                .setDivider(true)
+                .setSpacing(SeparatorSpacingSize.Large);
+            
+            const descriptionSection = new TextDisplayBuilder()
+                .setContent(`Ticket kamu sudah dibuat: <#${newRequest.id}>\nHarap tunggu sampai Admin respon ke ticket kamu!`);
+            
+            const container = new ContainerBuilder()
+                .setAccentColor(accentColor)
+                .addTextDisplayComponents(titleSection)
+                .addSeparatorComponents(separator)
+                .addTextDisplayComponents(descriptionSection);
 
-        const replyContainer = new ContainerBuilder()
-            .setAccentColor(accentColor)
-            .addTextDisplayComponents(replyTitle)
-            .addSeparatorComponents(replySep)
-            .addTextDisplayComponents(replyDesc);
-
-        await interaction.editReply({
-            components: [replyContainer],
-            flags: MessageFlags.IsComponentsV2,
-        });
+            await interaction.editReply({
+                components: [container],
+                flags: MessageFlags.IsComponentsV2,
+            });
+        } catch (ephemeralErr) {
+            console.error('[MIDDLEMAN EPHEMERAL ERROR]', ephemeralErr);
+            // Fallback to simple container
+            const accentColor = parseInt(config.primaryColor, 16);
+            const fallbackContainer = new ContainerBuilder()
+                .setAccentColor(accentColor)
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(`# HAJI UTONG - Middleman`)
+                )
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(`✅ Ticket kamu sudah dibuat: <#${newRequest.id}>`)
+                );
+            
+            try {
+                await interaction.editReply({
+                    components: [fallbackContainer],
+                    flags: MessageFlags.IsComponentsV2,
+                });
+            } catch (fallbackErr) {
+                console.error('[MIDDLEMAN FALLBACK ERROR]', fallbackErr.message);
+            }
+        }
 
         console.log(`[MIDDLEMAN] Request dibuat oleh ${interaction.user.tag} - Range: ${rangeMap[rangeValue]} - User ditambahkan: ${selectedUserId}`);
     } catch (error) {
-        console.error('[MIDDLEMAN CREATE ERROR]', error.message);
+        console.error('[MIDDLEMAN CREATE ERROR]', error);
         await replyWithError(interaction, error.message, true);
     }
 }
@@ -739,6 +912,17 @@ async function handleMiddlemanAddUser(interaction) {
         // Add user ke thread
         await thread.members.add(selectedUserId);
 
+        // Get user object for greeting
+        const selectedUser = await interaction.client.users.fetch(selectedUserId).catch(() => null);
+
+        // Send greeting message in thread
+        if (selectedUser) {
+            await thread.send({
+                content: `Selamat Sore, <@${selectedUserId}>`,
+                flags: MessageFlags.Suppress,
+            });
+        }
+
         const successBlock = new ContainerBuilder()
             .setAccentColor(parseInt(config.primaryColor, 16))
             .addTextDisplayComponents(
@@ -768,10 +952,15 @@ function replyWithError(interaction, message, isEditReply = false) {
         flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
     };
 
-    if (isEditReply) {
-        return interaction.editReply(replyOptions);
-    } else {
-        return interaction.reply(replyOptions);
+    try {
+        if (isEditReply || interaction.replied || interaction.deferred) {
+            return interaction.editReply(replyOptions);
+        } else {
+            return interaction.reply(replyOptions);
+        }
+    } catch (err) {
+        console.error('[REPLY ERROR]', err.message);
+        // Silently fail if interaction is expired or already acknowledged
     }
 }
 

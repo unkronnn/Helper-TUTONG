@@ -33,46 +33,37 @@ module.exports = {
     try {
       // Check if user has permission
       if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak memiliki permission untuk warn member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak memiliki permission untuk warn member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Cannot warn yourself
       if (targetUser.id === interaction.user.id) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa warn dirimu sendiri');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa warn dirimu sendiri');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Cannot warn owner
       if (targetUser.id === guild.ownerId) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa warn owner server');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa warn owner server');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -119,36 +110,30 @@ module.exports = {
         logger.info(`Could not DM ${targetUser.username}`);
       }
 
-      const successText = new TextDisplayBuilder()
-        .setContent(
-          `**WARNED**\n\n` +
-          `Target: ${targetUser.username}\n` +
-          `User ID: ${targetUser.id}\n` +
-          `Reason: ${reason}\n` +
-          `Warning Count: ${warningCount}\n` +
-          `Moderator: ${interaction.user.username}`
+      const successEmbed = new EmbedBuilder()
+        .setColor(0xFF9900)
+        .setTitle('User Warned')
+        .setDescription('Successfully warned the user!')
+        .addFields(
+          { name: 'User', value: `<@${targetUser.id}>`, inline: false },
+          { name: 'Warn by', value: `<@${interaction.user.id}>`, inline: false },
+          { name: 'Reason', value: reason || 'No reason provided', inline: false },
+          { name: 'Warning Count', value: `${warningCount}`, inline: false }
         );
 
-      const successContainer = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
-        .addTextDisplayComponents(successText);
-
       await interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [successContainer],
+        embeds: [successEmbed],
+        ephemeral: true
       });
     } catch (error) {
       console.error(error);
-      const errorText = new TextDisplayBuilder()
-        .setContent('❌ Terjadi kesalahan saat mem-warn user');
-
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
-        .addTextDisplayComponents(errorText);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription('❌ Terjadi kesalahan saat mem-warn user');
 
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [errorContainer],
+        embeds: [errorEmbed],
+        ephemeral: true
       });
     }
   }

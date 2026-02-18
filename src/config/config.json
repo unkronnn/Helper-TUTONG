@@ -2,24 +2,24 @@
     "primaryColor": "20B2AA",
     
     "roles": {
-        "staff": "1413110397384396952",
-        "buyer": "1408945546319892490",
-        "member": "1408945488333635725"
+        "staff": "000000000000000000",
+        "buyer": "000000000000000000",
+        "member": "000000000000000000"
     },
     
     "channels": {
-        "tickets": "1458824954417123520",
-        "middleman": "1410638043580338246",
-        "openedTickets": "1435337246214717612",
-        "transcripts": "1408945335220437063",
-        "testimonialsGeneral": "1409205928107966586",
-        "testimonialsJoki": "1455404858520768592",
-        "logsMiddleman": "1434532821430702152",
-        "announcements": "1449237015790096474",
-        "statusVoice": "1459641985437798632"
+        "tickets": "000000000000000000",
+        "middleman": "000000000000000000",
+        "openedTickets": "000000000000000001",
+        "transcripts": "000000000000000002",
+        "testimonialsGeneral": "000000000000000003",
+        "testimonialsJoki": "000000000000000004",
+        "logsMiddleman": "000000000000000005",
+        "announcements": "000000000000000006",
+        "statusVoice": "000000000000000007"
     },
     
     "categories": {
-        "serverStats": "1458646750867882116"
+        "serverStats": "000000000000000008"
     }
 }

@@ -14,6 +14,12 @@ module.exports = async () => {
         const commands = fs.readdirSync(`./src/commands/${dir}`).filter(file => file.endsWith('.js'));
 
         for (let file of commands) {
+            // Skip v2-components command
+            if (file === 'v2-components.js') {
+                skippedCommands.push(file);
+                continue;
+            }
+
             const commandModule = require(`../commands/${dir}/${file}`);
 
             if (commandModule.data && commandModule.data instanceof SlashCommandBuilder) {

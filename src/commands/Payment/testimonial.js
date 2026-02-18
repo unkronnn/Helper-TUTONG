@@ -205,7 +205,7 @@ module.exports = {
                 else if (priceRange === '> Rp 1.000.000') fee = '2% flat';
 
                 const header = new TextDisplayBuilder()
-                    .setContent(`## Voxteria - Midman Logs\n\nThank you for using our middleman service.`);
+                    .setContent(`## HAJI UTONG - Midman Logs\n\nThank you for using our middleman service.`);
 
                 const headerSection = new SectionBuilder()
                     .addTextDisplayComponents(header)
@@ -280,7 +280,7 @@ module.exports = {
                 const proof = options.getAttachment('proof');
 
                 const header = new TextDisplayBuilder()
-                    .setContent(`## Voxteria - Testimoni\n\nThank you for using our service.\nWe hope you are satisfied with the results we provided!`);
+                    .setContent(`## HAJI UTONG - Testimoni\n\nThank you for using our service.\nWe hope you are satisfied with the results we provided!`);
 
                 const headerSection = new SectionBuilder()
                     .addTextDisplayComponents(header)
@@ -365,7 +365,7 @@ module.exports = {
                 const proof = options.getAttachment('proof');
 
                 const header = new TextDisplayBuilder()
-                    .setContent(`## Voxteria - Testimoni\n\nThank you for shopping with us.\nWe hope you are satisfied with our service.`);
+                    .setContent(`## HAJI UTONG - Testimoni\n\nThank you for shopping with us.\nWe hope you are satisfied with our service.`);
 
                 const headerSection = new SectionBuilder()
                     .addTextDisplayComponents(header)

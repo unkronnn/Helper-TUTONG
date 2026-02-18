@@ -33,61 +33,49 @@ module.exports = {
     try {
       // Check if user has permission
       if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak memiliki permission untuk ban member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak memiliki permission untuk ban member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Check if bot can ban
       if (!guild.members.me.permissions.has(PermissionFlagsBits.BanMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot tidak memiliki permission untuk ban member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot tidak memiliki permission untuk ban member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Cannot ban yourself
       if (targetUser.id === interaction.user.id) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa ban dirimu sendiri');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa ban dirimu sendiri');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Cannot ban owner
       if (targetUser.id === guild.ownerId) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa ban owner server');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa ban owner server');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -110,35 +98,29 @@ module.exports = {
         console.log(`Could not DM ${targetUser.username}`);
       }
 
-      const successText = new TextDisplayBuilder()
-        .setContent(
-          `## :white_check_mark: User banned.\n\n` +
-          `Target: ${targetUser.username}\n` +
-          `User ID: ${targetUser.id}\n` +
-          `Reason: ${reason}\n` +
-          `Moderator: ${interaction.user.username}`
+      const successEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setTitle('User Banned')
+        .setDescription('The ban hammer has spoken!')
+        .addFields(
+          { name: 'User', value: `<@${targetUser.id}>`, inline: false },
+          { name: 'Banned by', value: `<@${interaction.user.id}>`, inline: false },
+          { name: 'Reason', value: reason || 'No reason provided', inline: false }
         );
 
-      const successContainer = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
-        .addTextDisplayComponents(successText);
-
       await interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [successContainer],
+        embeds: [successEmbed],
+        ephemeral: true
       });
     } catch (error) {
       console.error(error);
-      const errorText = new TextDisplayBuilder()
-        .setContent('❌ Terjadi kesalahan saat mem-ban user');
-
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
-        .addTextDisplayComponents(errorText);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription('❌ Terjadi kesalahan saat mem-ban user');
 
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [errorContainer],
+        embeds: [errorEmbed],
+        ephemeral: true
       });
     }
   }

@@ -33,31 +33,25 @@ module.exports = {
     try {
       // Check if user has permission
       if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak memiliki permission untuk unmute member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak memiliki permission untuk unmute member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Check if bot can mute
       if (!guild.members.me.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot tidak memiliki permission untuk unmute member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot tidak memiliki permission untuk unmute member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -66,16 +60,13 @@ module.exports = {
 
       // Check if member is actually muted
       if (!targetMember.communicationDisabledUntil) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ User ini tidak sedang di-mute');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ User ini tidak sedang di-mute');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -98,34 +89,29 @@ module.exports = {
         logger.info(`Could not DM ${targetUser.username}`);
       }
 
-      const successText = new TextDisplayBuilder()
-        .setContent(
-          `# :white_check_mark: User unmuted.\n\n` +
-          `Target: ${targetUser.username}\n` +
-          `Reason: ${reason}\n` +
-          `Moderator: ${interaction.user.username}`
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x00FF00)
+        .setTitle('User Unmuted')
+        .setDescription('Your voice has been restored.')
+        .addFields(
+          { name: 'User', value: `<@${targetUser.id}>`, inline: false },
+          { name: 'Unmuted by', value: `<@${interaction.user.id}>`, inline: false },
+          { name: 'Reason', value: reason || 'No reason provided', inline: false }
         );
 
-      const successContainer = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
-        .addTextDisplayComponents(successText);
-
       await interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [successContainer],
+        embeds: [successEmbed],
+        ephemeral: true
       });
     } catch (error) {
       console.error(error);
-      const errorText = new TextDisplayBuilder()
-        .setContent('❌ Terjadi kesalahan saat unmute user');
-
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
-        .addTextDisplayComponents(errorText);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription('❌ Terjadi kesalahan saat unmute user');
 
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [errorContainer],
+        embeds: [errorEmbed],
+        ephemeral: true
       });
     }
   }

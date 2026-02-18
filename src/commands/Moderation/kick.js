@@ -32,61 +32,49 @@ module.exports = {
     try {
       // Check if user has permission
       if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak memiliki permission untuk kick member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak memiliki permission untuk kick member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Check if bot can kick
       if (!guild.members.me.permissions.has(PermissionFlagsBits.KickMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot tidak memiliki permission untuk kick member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot tidak memiliki permission untuk kick member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Cannot kick yourself
       if (targetUser.id === interaction.user.id) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa kick dirimu sendiri');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa kick dirimu sendiri');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Cannot kick owner
       if (targetUser.id === guild.ownerId) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa kick owner server');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa kick owner server');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -94,16 +82,13 @@ module.exports = {
 
       // Check role hierarchy - bot can't kick members with equal or higher roles
       if (targetMember.roles.highest.position >= guild.members.me.roles.highest.position) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot tidak bisa kick member dengan role yang sama atau lebih tinggi');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot tidak bisa kick member dengan role yang sama atau lebih tinggi');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
       await targetMember.kick(reason);
@@ -125,35 +110,29 @@ module.exports = {
         logger.info(`Could not DM ${targetUser.username}`);
       }
 
-      const successText = new TextDisplayBuilder()
-        .setContent(
-          `## :white_check_mark: User kicked.\n\n` +
-          `Target: ${targetUser.username}\n` +
-          `User ID: ${targetUser.id}\n` +
-          `Reason: ${reason}\n` +
-          `Moderator: ${interaction.user.username}`
+      const successEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setTitle('User Kicked')
+        .setDescription('User have been removed from the realm.')
+        .addFields(
+          { name: 'User', value: `<@${targetUser.id}>`, inline: false },
+          { name: 'Kicked by', value: `<@${interaction.user.id}>`, inline: false },
+          { name: 'Reason', value: reason || 'No reason provided', inline: false }
         );
 
-      const successContainer = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
-        .addTextDisplayComponents(successText);
-
       await interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [successContainer],
+        embeds: [successEmbed],
+        ephemeral: true
       });
     } catch (error) {
       console.error(error);
-      const errorText = new TextDisplayBuilder()
-        .setContent('❌ Terjadi kesalahan saat mem-kick user');
-
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
-        .addTextDisplayComponents(errorText);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription('❌ Terjadi kesalahan saat mem-kick user');
 
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [errorContainer],
+        embeds: [errorEmbed],
+        ephemeral: true
       });
     }
   }

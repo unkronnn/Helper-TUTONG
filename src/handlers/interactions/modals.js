@@ -1,35 +1,28 @@
-const { MessageFlags, TextDisplayBuilder, ContainerBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, SeparatorBuilder, ThumbnailBuilder, SectionBuilder } = require('discord.js');
+const { MessageFlags, TextDisplayBuilder, ContainerBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, SeparatorBuilder, ThumbnailBuilder, SectionBuilder, SeparatorSpacingSize } = require('discord.js');
 const config = require('../../config/config.json');
-const { handlePurchaseFormModal } = require('../ticketHandler');
+const { handlePurchaseFormModal, handleHelpFormModal, createTicket } = require('../ticketHandler');
 
 // Generate transcript embed untuk ticket yang ditutup
 const generateTicketTranscript = (channel, ticketData, closedBy, reason) => {
     const accentColor = parseInt(config.primaryColor, 16);
-    
-    let ticketType = 'General Ticket';
-    if (channel.name.includes('purchase')) ticketType = 'Purchase Ticket';
-    if (channel.name.includes('help')) ticketType = 'Help Ticket';
-    if (channel.name.includes('midman')) ticketType = 'Middleman Ticket';
-
-    const transcriptContent = `${ticketType}
-
-• **Ticket ID:** ${ticketData.ticketId || 'N/A'}
-• **Opened By:** ${ticketData.creatorId ? `<@${ticketData.creatorId}>` : 'Unknown'}
-• **Closed By:** ${closedBy.tag}
-
-• **Open Time:** <t:${Math.floor(channel.createdTimestamp / 1000)}:f>
-• **Claimed By:** ${ticketData.claimedBy ? `<@${ticketData.claimedBy}>` : 'Not claimed'}
-• **Reason:** ${reason}`;
 
     const transcriptContainer = new ContainerBuilder()
         .setAccentColor(accentColor)
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`## Ticket Closed - Transcript\n\n${transcriptContent}`)
+            new TextDisplayBuilder().setContent(`# Ticket Closed`)
+        )
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`• **Ticket ID:** ${ticketData.ticketId || 'N/A'}\n• **Opened By:** ${ticketData.creatorId ? `<@${ticketData.creatorId}>` : 'Unknown'}\n• **Closed By:** <@${closedBy.id}>`)
+        )
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`• **Open Time:** <t:${Math.floor(channel.createdTimestamp / 1000)}:f>\n• **Claimed By:** ${ticketData.claimedBy ? `<@${ticketData.claimedBy}>` : 'Not claimed'}\n• **Reason:** ${reason}`)
         );
     
-    // Add View Thread button
+    // Add View Threaded button
     const viewThreadBtn = new ButtonBuilder()
-        .setLabel('View Thread')
+        .setLabel('View Threaded')
         .setStyle(ButtonStyle.Link)
         .setURL(channel.url);
     
@@ -41,12 +34,15 @@ const generateTicketTranscript = (channel, ticketData, closedBy, reason) => {
 async function handleModals(client, interaction) {
     if (interaction.customId === 'review_form_modal') {
         await handleReviewModal(client, interaction);
+    } else if (interaction.customId === 'help_form_modal') {
+        return await handleHelpFormModal(interaction, client);
     } else if (interaction.customId === 'purchase_form_modal') {
         return await handlePurchaseFormModal(interaction, client);
     } else if (interaction.customId === 'close_ticket_modal') {
         await handleCloseTicketModal(client, interaction);
     }
 }
+
 
 async function handleReviewModal(client, interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -80,7 +76,7 @@ async function handleReviewModal(client, interaction) {
         const thumbnail = new ThumbnailBuilder({ media: { url: userAvatar } });
 
         const header = new TextDisplayBuilder()
-            .setContent(`## Voxteria - User Feedback\n\nNew Review Submitted!`);
+            .setContent(`## HAJI UTONG - User Feedback\n\nNew Review Submitted!`);
 
         const headerSection = new SectionBuilder()
             .addTextDisplayComponents(header)
@@ -173,6 +169,14 @@ async function handleCloseTicketModal(client, interaction) {
                             // Extract dari message content
                             const match = notifMessage.content.match(/Ticket ID:\s*`?([A-Z0-9\-]+)`?/);
                             if (match) ticketId = match[1];
+                            
+                            // Delete the notification message
+                            await notifMessage.delete().catch(err => console.error('[NOTIF DELETE ERROR]', err.message));
+                        }
+                        
+                        // Delete staff mention message
+                        if (channel.staffMentionMessageId) {
+                            await staffChannel.messages.delete(channel.staffMentionMessageId).catch(err => console.error('[STAFF MENTION DELETE ERROR]', err.message));
                         }
                     }
                 } catch (e) {
@@ -204,6 +208,83 @@ async function handleCloseTicketModal(client, interaction) {
             // Lock and archive thread
             await channel.setLocked(true);
             await channel.setArchived(true);
+
+            // Send DM to ticket owner
+            try {
+                // Use creatorId which stores the actual user who opened the ticket
+                const creatorId = channel.creatorId;
+                if (creatorId) {
+                    const ticketOwner = await client.users.fetch(creatorId).catch(() => null);
+                    if (ticketOwner) {
+                        // Determine ticket type
+                        let ticketType = 'General Ticket';
+                        if (channel.name.includes('purchase')) ticketType = 'Purchase';
+                        if (channel.name.includes('help')) ticketType = 'Help';
+                        if (channel.name.includes('midman')) ticketType = 'Middleman';
+
+                        // Get created timestamp
+                        const createdTime = Math.floor(channel.createdTimestamp / 1000);
+
+                        // Get server icon/logo
+                        const guild = interaction.guild;
+                        const serverIcon = guild.iconURL({ size: 256, dynamic: true });
+                        const serverThumbnail = serverIcon ? new ThumbnailBuilder({ media: { url: serverIcon } }) : null;
+
+                        // Build header section with server icon
+                        const headerSection = new SectionBuilder()
+                            .addTextDisplayComponents(
+                                new TextDisplayBuilder().setContent(`## Ticket Closed\nThank you for using our service!`)
+                            );
+                        
+                        if (serverThumbnail) {
+                            headerSection.setThumbnailAccessory(serverThumbnail);
+                        }
+
+                        // Separator
+                        const sep1 = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large);
+
+                        // Ticket info section
+                        const ticketInfo = new TextDisplayBuilder()
+                            .setContent(`• **Ticket ID:** ${ticketId}\n• **Type:** ${ticketType}`);
+
+
+                        // User info section
+                        const userInfo = new TextDisplayBuilder()
+                            .setContent(`• **Opened by:** <@${creatorId}>\n• **Closed by:** <@${interaction.user.id}>`);
+
+                        const sep2 = new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large);
+
+                        // Time and claim info
+                        const timeInfo = new TextDisplayBuilder()
+                            .setContent(`• **Open Time:** <t:${createdTime}:f>\n• **Claimed By:** ${channel.claimedBy ? `<@${channel.claimedBy}>` : 'Not claimed'}`);
+
+
+                        // Reason section
+                        const reasonInfo = new TextDisplayBuilder()
+                            .setContent(`• **Reason:** ${reason}`);
+
+                        // Build DM embed
+                        const dmContainer = new ContainerBuilder()
+                            .setAccentColor(accentColor)
+                            .addSectionComponents(headerSection)
+                            .addSeparatorComponents(sep1)
+                            .addTextDisplayComponents(ticketInfo)
+                            .addTextDisplayComponents(userInfo)
+                            .addSeparatorComponents(sep2)
+                            .addTextDisplayComponents(timeInfo)
+                            .addTextDisplayComponents(reasonInfo);
+
+                        await ticketOwner.send({
+                            components: [dmContainer],
+                            flags: MessageFlags.IsComponentsV2,
+                        }).catch(err => console.error('[DM SEND ERROR]', err.message));
+                        
+                        console.log(`[TICKETS] DM sent to ${ticketOwner.tag} for closed ticket ${channel.name}`);
+                    }
+                }
+            } catch (dmErr) {
+                console.error('[DM ERROR]', dmErr.message);
+            }
 
             const closedBlock = new ContainerBuilder()
                 .setAccentColor(accentColor)

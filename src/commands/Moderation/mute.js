@@ -40,31 +40,25 @@ module.exports = {
     try {
       // Check if user has permission
       if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak memiliki permission untuk mute member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak memiliki permission untuk mute member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Check if bot can mute
       if (!guild.members.me.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot tidak memiliki permission untuk mute member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot tidak memiliki permission untuk mute member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -73,48 +67,39 @@ module.exports = {
 
       // Cannot mute yourself
       if (targetUser.id === interaction.user.id) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak bisa mute dirimu sendiri');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak bisa mute dirimu sendiri');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Check role hierarchy
       const botMember = guild.members.me;
       if (botMember.roles.highest.position <= targetMember.roles.highest.position) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot role harus lebih tinggi dari target member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot role harus lebih tinggi dari target member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Parse duration
       const duration = parseDuration(durationStr);
       if (!duration) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Format durasi tidak valid (contoh: 1h, 30m, 1d)');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Format durasi tidak valid (contoh: 1h, 30m, 1d)');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -139,22 +124,20 @@ module.exports = {
         logger.info(`Could not DM ${targetUser.username}`);
       }
 
-      const successText = new TextDisplayBuilder()
-        .setContent(
-          `## :white_check_mark: User muted.\n\n` +
-          `Target: ${targetUser.username}\n` +
-          `Duration: ${durationStr}\n` +
-          `Reason: ${reason}\n` +
-          `Moderator: ${interaction.user.username}`
+      const successEmbed = new EmbedBuilder()
+        .setColor(0xFFAA00)
+        .setTitle('User Muted')
+        .setDescription('Silence has been enforced.')
+        .addFields(
+          { name: 'User', value: `<@${targetUser.id}>`, inline: false },
+          { name: 'Muted by', value: `<@${interaction.user.id}>`, inline: false },
+          { name: 'Duration', value: durationStr, inline: false },
+          { name: 'Reason', value: reason || 'No reason provided', inline: false }
         );
 
-      const successContainer = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
-        .addTextDisplayComponents(successText);
-
       await interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [successContainer],
+        embeds: [successEmbed],
+        ephemeral: true
       });
     } catch (error) {
       console.error(error);
@@ -165,16 +148,13 @@ module.exports = {
         errorMessage = '❌ Bot tidak memiliki permission yang cukup (pastikan bot role lebih tinggi)';
       }
 
-      const errorText = new TextDisplayBuilder()
-        .setContent(errorMessage);
-
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
-        .addTextDisplayComponents(errorText);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription(errorMessage);
 
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [errorContainer],
+        embeds: [errorEmbed],
+        ephemeral: true
       });
     }
   }

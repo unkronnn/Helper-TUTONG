@@ -1,6 +1,5 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ButtonBuilder, ActionRowBuilder } = require('@discordjs/builders');
-const { MessageFlags, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ButtonStyle, ContainerBuilder, TextDisplayBuilder, EmbedBuilder } = require('discord.js');
+const { ButtonBuilder, ActionRowBuilder } = require('discord.js');
 const config = require('../../config/config.json');
 const logger = require('../../console/logger');
 const fs = require('fs');
@@ -90,27 +89,29 @@ ${description}`;
     }
 
     if (subcommand === 'toggle') {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       try {
         // Check if user has admin/staff role
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator) && !interaction.member.roles.cache.has(config.roles.staff)) {
+        const isAdmin = interaction.member?.permissions?.has(PermissionFlagsBits.Administrator);
+        const isStaff = interaction.member?.roles?.cache?.has(config.roles.staff);
+        
+        if (!isAdmin && !isStaff) {
           const errorBlock = new ContainerBuilder()
-            .setAccentColor(0xFF0000)
+            .setAccentColor(parseInt(config.primaryColor, 16))
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent('❌ Hanya admin atau staff yang bisa toggle status toko!')
             );
-          return await interaction.reply({
+          return await interaction.editReply({
             components: [errorBlock],
-            flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+            flags: MessageFlags.IsComponentsV2,
           });
         }
 
         const newStatus = !status.isOpen;
-        logger.debug(`[STATUS] Current isOpen=${status.isOpen}, New isOpen=${newStatus}`);
-        logger.info('[STATUS] Setting status...');
+        logger.info(`[STATUS] Toggling to ${newStatus ? 'OPEN' : 'CLOSED'} by ${interaction.user.tag}`);
         setStatus(newStatus, interaction.user.tag);
-        logger.info('[STATUS] Status set successfully');
 
-        // Update voice channel name
+        // Update voice channel status
         try {
           const statusChannel = await interaction.client.channels.fetch(config.channels.statusVoice);
           if (statusChannel && statusChannel.isVoiceBased()) {
@@ -123,24 +124,29 @@ ${description}`;
           logger.error(`[STATUS] Failed to update voice channel: ${err.message}`);
         }
 
-        const title = newStatus ? `🔓 We're Open For Today! 🔓` : `🔒 We're Closed for Today! 🔒`;
+        const title = newStatus ? `# 🔓 We're Open For Today!` : `# 🔒 We're Closed for Today!`;
         const description = newStatus 
-          ? `Yang mau nanya-nanya dulu, atau yang udah siap gas order, pintu selalu terbuka. Jangan ragu buat apa admin di tiket ya. Gas bikin tiket sekarang, mumpung antrean masih aman! 🔥`
-          : `Ticket system bakal kami lock setelah ini! buat yang sudah buka ticket akan tetap direspon sampai trx/kendala kamu selesai`;
-        
-        const content = `# ${title}
+          ? `Toko sudah buka ya guys! Yang mau tanya-tanya, order, atau butuh Jasa Rekber, pintu tiket selalu terbuka. Jangan ragu buat chat admin di dalam tiket ya!`
+          : `Toko tutup dulu ya guys! Admin mau istirahat dulu. Buat kalian yang tiketnya sudah terbuka atau transaksi yang lagi jalan, bakal tetap admin layanin sampai tuntas/kelar kok! Jadi nggak ditinggal gitu aja ya. Thank you, see you tomorrow! 😴`;
 
-<@&${config.roles.member}>
-
-${description}`;
-
-        // Kirim pesan ke channel #general atau channel tertentu
-        logger.info('[STATUS] Sending announcement...');
+        // Kirim pesan ke channel #announcements
         try {
           const announcementChannel = await interaction.client.channels.fetch(config.channels.announcements);
           if (announcementChannel) {
-            await announcementChannel.send({ content: content });
+            // Kirim pesan pertama: tag member
+            await announcementChannel.send(`<@&${config.roles.member}>`);
+            
+            // Kirim pesan kedua: embed dengan styling
+            const embedColor = newStatus ? 0x2ecc71 : 0xe74c3c; // Hijau untuk open, merah untuk closed
+            const embed = new EmbedBuilder()
+              .setTitle(title)
+              .setDescription(description)
+              .setColor(embedColor);
+            
+            await announcementChannel.send({ embeds: [embed] });
             logger.info('[STATUS] Announcement sent');
+          } else {
+            logger.error('[STATUS] Announcement channel not found');
           }
         } catch (err) {
           logger.error('[STATUS] Failed to send announcement:', err.message);
@@ -149,21 +155,21 @@ ${description}`;
         // Reply ke user dengan ephemeral message
         logger.info('[STATUS] Sending reply...');
         const confirmBlock = new ContainerBuilder()
-          .setAccentColor(newStatus ? 0x20B2AA : 0xFF6B6B)
+          .setAccentColor(parseInt(config.primaryColor, 16))
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(`✅ Status berhasil diubah ke **${newStatus ? 'OPEN' : 'CLOSED'}**`)
           );
 
-        await interaction.reply({
+        await interaction.editReply({
           components: [confirmBlock],
           flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
         });
 
         logger.debug(`[STATUS] Store status toggled to ${newStatus ? 'OPEN' : 'CLOSED'} by ${interaction.user.tag}`);
       } catch (error) {
-        console.error('[STATUS TOGGLE ERROR]', error.message);
+        logger.error('[STATUS] Error during toggle:', error.message);
         const errorBlock = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
+          .setAccentColor(parseInt(config.primaryColor, 16))
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
           );
@@ -181,7 +187,7 @@ ${description}`;
             });
           }
         } catch (replyErr) {
-          console.error('[STATUS REPLY ERROR]', replyErr.message);
+          logger.error('[STATUS] Failed to send error reply:', replyErr.message);
         }
       }
     }

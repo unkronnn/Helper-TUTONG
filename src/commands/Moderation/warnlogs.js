@@ -63,10 +63,19 @@ module.exports = {
       const headerText = new TextDisplayBuilder()
         .setContent(`# ⚠️ **Warning Logs**\n\nWarning history untuk ${targetUser.username}`);
 
-      const thumbnail = new ThumbnailBuilder({ media: { url: targetUser.displayAvatarURL({ dynamic: true, size: 512 }) } });
       const headerSection = new SectionBuilder()
-        .addTextDisplayComponents(headerText)
-        .setThumbnailAccessory(thumbnail);
+        .addTextDisplayComponents(headerText);
+      
+      // Only set thumbnail if avatar URL exists
+      const userAvatarUrl = targetUser.displayAvatarURL({ dynamic: true, size: 512 });
+      if (userAvatarUrl && userAvatarUrl.length > 0) {
+        try {
+          const thumbnail = new ThumbnailBuilder({ media: { url: userAvatarUrl } });
+          headerSection.setThumbnailAccessory(thumbnail);
+        } catch (err) {
+          console.warn(`[WARNLOGS] Failed to create thumbnail: ${err.message}`);
+        }
+      }
 
       // Build warnings list
       let warningsText = `**Username:** ${targetUser.username}\n**User ID:** \`${targetUser.id}\`\n\n**Warnings:**\n`;

@@ -33,31 +33,25 @@ module.exports = {
     try {
       // Check if user has permission
       if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Kamu tidak memiliki permission untuk unban member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Kamu tidak memiliki permission untuk unban member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
       // Check if bot can ban
       if (!guild.members.me.permissions.has(PermissionFlagsBits.BanMembers)) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ Bot tidak memiliki permission untuk unban member');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ Bot tidak memiliki permission untuk unban member');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -66,16 +60,13 @@ module.exports = {
       const bannedUser = bans.find(ban => ban.user.id === userId);
 
       if (!bannedUser) {
-        const errorText = new TextDisplayBuilder()
-          .setContent('❌ User ini tidak di-ban di server');
-
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(0xFF0000)
-          .addTextDisplayComponents(errorText);
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription('❌ User ini tidak di-ban di server');
 
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: [errorContainer],
+          embeds: [errorEmbed],
+          ephemeral: true
         });
       }
 
@@ -98,35 +89,29 @@ module.exports = {
         logger.info(`Could not DM ${bannedUser.user.username}`);
       }
 
-      const successText = new TextDisplayBuilder()
-        .setContent(
-          `## :white_check_mark: User unbanned.\n\n` +
-          `Target: ${bannedUser.user.username}\n` +
-          `User ID: ${bannedUser.user.id}\n` +
-          `Reason: ${reason}\n` +
-          `Moderator: ${interaction.user.username}`
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x00FF00)
+        .setTitle('User Unbanned')
+        .setDescription('Your exile has ended. Welcome back!')
+        .addFields(
+          { name: 'User', value: `<@${bannedUser.user.id}>`, inline: false },
+          { name: 'Unbanned by', value: `<@${interaction.user.id}>`, inline: false },
+          { name: 'Reason', value: reason || 'No reason provided', inline: false }
         );
 
-      const successContainer = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
-        .addTextDisplayComponents(successText);
-
       await interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [successContainer],
+        embeds: [successEmbed],
+        ephemeral: true
       });
     } catch (error) {
       console.error(error);
-      const errorText = new TextDisplayBuilder()
-        .setContent('❌ Terjadi kesalahan saat meng-unban user');
-
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
-        .addTextDisplayComponents(errorText);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription('❌ Terjadi kesalahan saat meng-unban user');
 
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2,
-        components: [errorContainer],
+        embeds: [errorEmbed],
+        ephemeral: true
       });
     }
   }

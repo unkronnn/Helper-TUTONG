@@ -65,30 +65,28 @@ module.exports = {
     // Sections with Buttons
     const sectionWithButtons = [
       new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('🌐 GitHub'))
-        .setButtonAccessory(
-          new ButtonBuilder()
-            .setLabel('GitHub')
-            .setURL('https://github.com/ZarScape')
-            .setStyle(ButtonStyle.Link)
-        ),
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent('🌐 GitHub')),
       new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('📺 **YouTube**'))
-        .setButtonAccessory(
-          new ButtonBuilder()
-            .setLabel('Channel')
-            .setURL('https://www.youtube.com/@ZarScape')
-            .setStyle(ButtonStyle.Link)
-        ),
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent('📺 **YouTube**')),
       new SectionBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent('💬 **Discord**'))
-        .setButtonAccessory(
-          new ButtonBuilder()
-            .setLabel('Zarco HQ')
-            .setURL('https://discord.gg/6YVmxA4Qsf')
-            .setStyle(ButtonStyle.Link)
-        )
     ];
+
+    // Link buttons for ActionRow (not supported as accessories)
+    const linkButtonsRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel('GitHub')
+        .setURL('https://github.com/ZarScape')
+        .setStyle(ButtonStyle.Link),
+      new ButtonBuilder()
+        .setLabel('YouTube Channel')
+        .setURL('https://www.youtube.com/@ZarScape')
+        .setStyle(ButtonStyle.Link),
+      new ButtonBuilder()
+        .setLabel('Discord - Zarco HQ')
+        .setURL('https://discord.gg/6YVmxA4Qsf')
+        .setStyle(ButtonStyle.Link)
+    );
 
     // Generate dummy JSON in memory
     const dummyJSON = Buffer.from(JSON.stringify({ message: 'This is a dummy JSON file', timestamp: Date.now() }, null, 2));
@@ -97,7 +95,7 @@ module.exports = {
 
     // Container
     const container = new ContainerBuilder()
-      .setAccentColor(parseInt(config.color.replace('#', ''), 16))
+      .setAccentColor(parseInt(config.primaryColor, 16))
       .addMediaGalleryComponents(mediaGallery)
       .addSectionComponents(sectionWithThumbnail)
       .addMediaGalleryComponents(
@@ -120,7 +118,7 @@ module.exports = {
     // Reply
     await interaction.reply({
       flags: MessageFlags.IsComponentsV2,
-      components: [textDisplay, separator, sectionWithThumbnail, selectActionRow, container],
+      components: [textDisplay, separator, sectionWithThumbnail, selectActionRow, container, linkButtonsRow],
       files: [attachment]
     });
   }

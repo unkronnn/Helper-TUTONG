@@ -13,7 +13,7 @@ async function setupServerStats(client) {
         }
 
         // Fetch members dengan timeout untuk pastikan cache ter-load (non-blocking)
-        guild.members.fetch({ limit: 0 })
+        guild.members.fetch()
             .catch(err => console.log(colors.yellow(`[SERVER STATS] Member fetch warning: ${err.message}`)));
 
         // Jika config kosong, guide user
@@ -133,7 +133,7 @@ async function autoUpdateServerStats(client) {
                     await allMembersChannel.setName(newName).catch(err => {
                         console.error(`[STATS] Error updating All Members: ${err.message}`);
                     });
-                    console.log(colors.green(`[STATS] ✓ Updated All Members: ${totalMembers}`));
+                    // console.log(colors.green(`[STATS] ✓ Updated All Members: ${totalMembers}`));
                 }
             }
 
@@ -146,7 +146,7 @@ async function autoUpdateServerStats(client) {
                     await buyersChannel.setName(newName).catch(err => {
                         console.error(`[STATS] Error updating Buyers: ${err.message}`);
                     });
-                    console.log(colors.green(`[STATS] ✓ Updated Buyers: ${buyerCount}`));
+                    // console.log(colors.green(`[STATS] ✓ Updated Buyers: ${buyerCount}`));
                 }
             }
 
@@ -159,7 +159,7 @@ async function autoUpdateServerStats(client) {
                     await botsChannel.setName(newName).catch(err => {
                         console.error(`[STATS] Error updating Bots: ${err.message}`);
                     });
-                    console.log(colors.green(`[STATS] ✓ Updated Bots: ${botCount}`));
+                    // console.log(colors.green(`[STATS] ✓ Updated Bots: ${botCount}`));
                 }
             }
         }
@@ -171,7 +171,9 @@ async function autoUpdateServerStats(client) {
 function setupStats(client) {
     setupServerStats(client);
     
-    setInterval(() => autoUpdateServerStats(client), 10000);
+    // Update stats immediately after setup, then every 5 seconds
+    autoUpdateServerStats(client);
+    setInterval(() => autoUpdateServerStats(client), 5000);
 }
 
 module.exports = { setupStats };

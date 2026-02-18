@@ -3,8 +3,13 @@ const config = require('../config/config.json');
 const { handleTicketInteractions } = require('./interactions/tickets');
 const { handleSelectMenus } = require('./interactions/selectMenus');
 const { handleModals } = require('./interactions/modals');
+const SecurityMiddleware = require('../security/middleware');
+const InputSanitizer = require('../security/sanitizer');
+const auditLogger = require('../security/auditLogger');
 
-// Helper function
+// Initialize security
+let securityMiddleware;
+
 function buildErrorBlock(message) {
     const accentColor = parseInt(config.primaryColor, 16);
     
@@ -17,6 +22,16 @@ function buildErrorBlock(message) {
 
 async function handleInteraction(client, interaction) {
     try {
+        // Initialize security middleware if not already done
+        if (!securityMiddleware) {
+            securityMiddleware = new SecurityMiddleware(client);
+        }
+
+        // Validate interaction origin
+        if (!securityMiddleware.validateInteractionOrigin(interaction)) {
+            return;
+        }
+
         // Handle slash commands
         if (interaction.isChatInputCommand()) {
             const command = client.slash.get(interaction.commandName);
@@ -30,30 +45,60 @@ async function handleInteraction(client, interaction) {
                 });
             }
 
-            await command.run(client, interaction, interaction.options);
+            // Execute command
+            try {
+                await command.run(client, interaction, interaction.options);
+                securityMiddleware.logCommandExecution(
+                    interaction.user.id,
+                    interaction.commandName,
+                    interaction.guildId,
+                    true
+                );
+            } catch (cmdErr) {
+                securityMiddleware.logCommandExecution(
+                    interaction.user.id,
+                    interaction.commandName,
+                    interaction.guildId,
+                    false,
+                    cmdErr.message
+                );
+                throw cmdErr;
+            }
             return;
         }
 
-        // Handle string select menus (payment select, range select)
+        // Handle string select menus
         if (interaction.isStringSelectMenu()) {
+            const sanitized = interaction.values.map(val => InputSanitizer.sanitizeString(val));
+            interaction.values = sanitized;
             await handleSelectMenus(client, interaction);
             return;
         }
 
-        // Handle user select menus (ticket add member, middleman add member)
+        // Handle user select menus
         if (interaction.isUserSelectMenu()) {
+            interaction.values.forEach(userId => {
+                InputSanitizer.validateInput(userId, 'userId');
+            });
             await handleTicketInteractions(client, interaction);
             return;
         }
 
-        // Handle buttons (ticket, middleman, status, review)
+        // Handle buttons
         if (interaction.isButton()) {
+            InputSanitizer.sanitizeString(interaction.customId);
             await handleTicketInteractions(client, interaction);
             return;
         }
 
-        // Handle modals (review, purchase form, close ticket)
+        // Handle modals
         if (interaction.isModalSubmit()) {
+            const fields = interaction.fields.fields;
+            fields.forEach((field, key) => {
+                if (typeof field.value === 'string') {
+                    field.value = InputSanitizer.sanitizeString(field.value);
+                }
+            });
             await handleModals(client, interaction);
             return;
         }
@@ -72,3 +117,4 @@ async function handleInteraction(client, interaction) {
 }
 
 module.exports = { handleInteraction };
+

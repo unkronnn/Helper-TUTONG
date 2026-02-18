@@ -1,7 +1,7 @@
 {
   "name": "VoxHelper",
   "version": "0.0.1",
-  "description": "Simple discord bot made for Voxteria!",
+  "description": "Simple discord bot made for HAJI UTONG!",
   "license": "ISC",
   "keywords": [
     "discord.js",
@@ -17,7 +17,8 @@
   "main": "src/zar.js",
   "scripts": {
     "start": "node src/zar.js",
-    "dev": "nodemon src/zar.js"
+    "dev": "nodemon src/zar.js",
+    "security-check": "node scripts/security-check.js"
   },
   "type": "javascript",
   "author": "nop4al",
