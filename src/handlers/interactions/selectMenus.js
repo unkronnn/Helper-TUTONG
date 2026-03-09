@@ -53,9 +53,15 @@ async function handleSelectMenus(client, interaction) {
             const result        = create_platform_select_embed(selected_game);
 
             if (!result) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Game not found or coming soon!');
+                const error_container = new ContainerBuilder()
+                    .setAccentColor(0xFF0000)
+                    .addTextDisplayComponents(error_text);
+
                 return await interaction.update({
-                    content : 'Game not found or coming soon!',
-                    components: []
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2
                 });
             }
 
@@ -75,9 +81,15 @@ async function handleSelectMenus(client, interaction) {
             const result                 = create_cheat_select_embed(game_id, platform_id);
 
             if (!result) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Platform not found!');
+                const error_container = new ContainerBuilder()
+                    .setAccentColor(0xFF0000)
+                    .addTextDisplayComponents(error_text);
+
                 return await interaction.update({
-                    content : 'Platform not found!',
-                    components: []
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2
                 });
             }
 
@@ -97,9 +109,15 @@ async function handleSelectMenus(client, interaction) {
             const result                           = create_cheat_detail_embed(game_id, platform_id, cheat_id);
 
             if (!result) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Cheat details not found!');
+                const error_container = new ContainerBuilder()
+                    .setAccentColor(0xFF0000)
+                    .addTextDisplayComponents(error_text);
+
                 return await interaction.update({
-                    content : 'Cheat details not found!',
-                    components: []
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2
                 });
             }
 
@@ -131,9 +149,15 @@ async function handleSelectMenus(client, interaction) {
             const accentColor = parseInt(config.primaryColor.replace('#', ''), 16);
 
             if (!category) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Category not found!');
+                const error_container = new ContainerBuilder()
+                    .setAccentColor(0xFF0000)
+                    .addTextDisplayComponents(error_text);
+
                 return await interaction.update({
-                    content: '❌ Category not found!',
-                    components: []
+                    components: [error_container],
+                    flags: MessageFlags.IsComponentsV2
                 });
             }
 
