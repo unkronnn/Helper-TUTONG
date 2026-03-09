@@ -147,20 +147,14 @@ function create_bypass_service_detail_embed(service_id) {
 
   const separator5 = new SeparatorBuilder();
 
-  // Buy Now button
+  // Buy Now button only (no back button needed since panel stays visible)
   const buy_button = new ButtonBuilder()
     .setLabel('Buy Now')
     .setURL('https://discord.com/channels/1338437118296330292/1473664373980528640')
     .setStyle(5); // Link
 
-  // Back button
-  const back_button = new ButtonBuilder()
-    .setCustomId('bypass_catalog_back')
-    .setLabel('Back to Services')
-    .setStyle(1); // Primary
-
   const button_row = new ActionRowBuilder()
-    .addComponents(buy_button, back_button);
+    .addComponents(buy_button);
 
   // Build container
   const container = new ContainerBuilder()

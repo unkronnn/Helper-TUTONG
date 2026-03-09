@@ -246,13 +246,13 @@ async function handleSelectMenus(client, interaction) {
                 const error_container = new ContainerBuilder()
                     .addTextDisplayComponents(error_text);
 
-                return await interaction.update({
+                return await interaction.reply({
                     components : [error_container],
                     flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
                 });
             }
 
-            await interaction.update({
+            await interaction.reply({
                 components : [container],
                 flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
@@ -260,14 +260,11 @@ async function handleSelectMenus(client, interaction) {
         }
 
         // - BYPASS CATALOG BACK TO MAIN - \\
+        // Note: Not needed since panel is never replaced
+        // Kept for potential future use
         if (interaction.customId === 'bypass_catalog_back') {
-            const { create_main_bypass_catalog_embed } = require('../../shared/catalog/bypass_val_controller');
-            const container                          = create_main_bypass_catalog_embed();
-
-            await interaction.update({
-                components : [container],
-                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
-            });
+            // This button is not used in current implementation
+            // Panel stays visible, details shown as ephemeral replies
             return;
         }
 
