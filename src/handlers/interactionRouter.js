@@ -90,7 +90,8 @@ async function handleInteraction(client, interaction) {
 
             // Handle catalog buttons
             if (interaction.customId === 'pc_catalog_back' ||
-                interaction.customId.startsWith('pc_back_cheats-')) {
+                interaction.customId.startsWith('pc_back_cheats-') ||
+                interaction.customId === 'bypass_catalog_back') {
                 await handleSelectMenus(client, interaction);
                 return;
             }

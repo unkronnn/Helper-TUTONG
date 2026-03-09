@@ -12,6 +12,9 @@ const {
   create_cheat_list_embed: create_pc_cheat_list_embed,
   create_cheat_detail_embed: create_pc_cheat_detail_embed
 } = require('../../shared/catalog/pc_catalog_controller');
+const {
+  create_bypass_service_detail_embed
+} = require('../../shared/catalog/bypass_val_controller');
 
 const paymentsFile = path.join(__dirname, '../../config/payments.json');
 
@@ -222,6 +225,44 @@ async function handleSelectMenus(client, interaction) {
         if (interaction.customId.startsWith('pc_back_cheats-')) {
             const game_id = interaction.customId.replace('pc_back_cheats-', '');
             const container = create_pc_cheat_list_embed(game_id);
+
+            await interaction.update({
+                components : [container],
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // ================== BYPASS VAL HANDLERS ==================
+        // - BYPASS SERVICE SELECT - \\
+        if (interaction.customId === 'bypass_service_select') {
+            const selected_service = interaction.values[0];
+            const service_id      = selected_service.replace('bypass-', '');
+            const container       = create_bypass_service_detail_embed(service_id);
+
+            if (!container) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Service not found!');
+                const error_container = new ContainerBuilder()
+                    .addTextDisplayComponents(error_text);
+
+                return await interaction.update({
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+                });
+            }
+
+            await interaction.update({
+                components : [container],
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // - BYPASS CATALOG BACK TO MAIN - \\
+        if (interaction.customId === 'bypass_catalog_back') {
+            const { create_main_bypass_catalog_embed } = require('../../shared/catalog/bypass_val_controller');
+            const container                          = create_main_bypass_catalog_embed();
 
             await interaction.update({
                 components : [container],
