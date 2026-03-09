@@ -685,7 +685,74 @@ const __catalog_games = {
     id    : 'cross_fire',
     name  : 'CROSS FIRE',
     emoji : '<:crossfire:1480374665934405842>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'gbd_cfm_android',
+            name        : 'GBD CFM ANDROID',
+            emoji       : '<:gbdcfm:1480418061445238824>',
+            description: 'Cross Fire Global & VNG - Android (Non Root)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Wallhack',
+              'No Recoil'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 250.000' }
+            ]
+          },
+          {
+            id          : 'gp_cfm_root',
+            name        : 'GP+ CFM - ROOT',
+            emoji       : '<:gpcfm:1480418087252529234>',
+            description: 'Cross Fire Global & VNG - Android (Root)',
+            features    : [
+              'ESP',
+              'Box',
+              'Health',
+              'Line',
+              'Skeleton',
+              'Aimbot'
+            ],
+            prices      : [
+              { duration: '30 days', price: 'Rp 100.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'gbd_cfm_ios',
+            name        : 'GBD CFM iOS',
+            emoji       : '<:gbdcfmios:1480418123424469186>',
+            description: 'Cross Fire VNG - iOS (IPA)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Wallhack',
+              'No Recoil',
+              'Anti-Ban'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 130.000' },
+              { duration: '30 days', price: 'Rp 260.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   honor_of_kings: {
     id    : 'honor_of_kings',
