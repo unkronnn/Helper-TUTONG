@@ -4,6 +4,352 @@
  */
 
 const __pc_catalog_games = {
+  arena_breakout: {
+    id          : 'arena_breakout',
+    name        : 'ARENA BREAKOUT INFINITE',
+    emoji       : '<:ab:1480493955555786762>',
+    description: 'Arena Breakout: Infinite - PC Game',
+    cheats      : [
+      {
+        id          : 'ghost_abi',
+        name        : 'GHOST : ABI',
+        emoji       : '<:ghost:1480493993048539236>',
+        description: 'A premium product for the game Arena Breakout: Infinite from Ghost group',
+        features    : [
+          '**Aim (Aimbot) (PSilent)**',
+          '• Enable Aimbot, HotKey Vector',
+          '• FOV, Smooth, Max Distance',
+          '• Enable pSilent, Hotkey',
+          '• FOV, Max Distance',
+          '',
+          '**Visuals**',
+          '• Enable, Show Name, Box, Skeleton',
+          '• Show weapon, price, distance',
+          '• Show armor, ammo, Health',
+          '• Max distance',
+          '',
+          '**Loot**',
+          '• Show Name, Price, Distance',
+          '• Weapon, Adapter, Butt, Armor',
+          '• Recovery, Mybag, Vest bag',
+          '• Loot Container, Avatar, Safe',
+          '• Pocket, Badge, Items, Other',
+          '• Max Distance',
+          '',
+          '**Misc**',
+          '• Instant Kill, Recoil Control',
+          '',
+          '**Other**',
+          '• Load config, Save config'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2, 24H2, 25H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT & MBR',
+          bios      : 'UEFI & Legacy',
+          type      : 'Internal'
+        },
+        additional  : [
+          'Supported Resolutions: Fullscreen, Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: No',
+          'Game Client: Official Game Launcher, Steam & Epic Games',
+          'Run from flash drive: Yes'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 138.000', price_usd: '$8.00'  },
+          { duration: '7 DAY',  price_idr: 'IDR 655.500', price_usd: '$38.50' },
+          { duration: '30 DAY', price_idr: 'IDR 1.023.500', price_usd: '$60.00' }
+        ]
+      },
+      {
+        id          : 'lexy_abi',
+        name        : 'LEXY : ABI',
+        emoji       : '<:lex:1480454610115231764>',
+        description: 'A premium product for the game Arena Breakout from Lexy group',
+        features    : [
+          '**Features**',
+          '• Please check the available media for a list of features!'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2, 24H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT & MBR',
+          bios      : 'UEFI & Legacy',
+          type      : 'External'
+        },
+        additional  : [
+          'Supported Resolutions: Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: Yes',
+          'Game Client: Steam & Official Launcher',
+          'In-built Spoofer: Yes'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 180.500', price_usd: '$10.50' },
+          { duration: '7 DAY',  price_idr: 'IDR 849.250', price_usd: '$50.00' },
+          { duration: '30 DAY', price_idr: 'IDR 1.496.750', price_usd: '$89.00' }
+        ]
+      },
+      {
+        id          : 'crooked_abi',
+        name        : 'CROOKED ARM\'S : ABI',
+        emoji       : '<:crocked:1480441511391793184>',
+        description: 'A premium product for the game Arena Breakout: Infinite from Crooked Arm\'s group',
+        features    : [
+          '**Players**',
+          '• Only visible, My team players',
+          '• Name, Team, Level, Category',
+          '• Health, Weapon in hands',
+          '• Ammo count, Cost of items',
+          '• Corpse, Line, Box type',
+          '• 2D, 3D, Skeleton type',
+          '• Skeleton line thickness',
+          '• Skeleton display distance',
+          '• Distance, Display distance',
+          '',
+          '**Bots**',
+          '• Only visible, Name, Level',
+          '• Category, Weapon in hands',
+          '• Ammo count, Cost of bot items',
+          '• Corpse, Line, Box type',
+          '• 2D, 3D, Skeleton type',
+          '• Distance, Display distance',
+          '',
+          '**Radar**',
+          '• Enable radar, Show players/bots',
+          '• Display distance, Position X/Y',
+          '• Size',
+          '',
+          '**Loot**',
+          '• Open loot list, Sort type (Name/Price)',
+          '• Weapons, Adapters, Ammo',
+          '• Equipments, Medical suppliers',
+          '• Provisions, Keys, Miscellaneous',
+          '• Quest items, Other items',
+          '• Use item rarity color',
+          '• Show durability, count, price',
+          '• Limit by price, Display distance',
+          '',
+          '**Aimbot**',
+          '• Enable aimbot, Aim prediction',
+          '• Compensate breath & recoil',
+          '• Aiming at knocked/bot players',
+          '• Visibility check, Show snapline',
+          '• Smoothing, Show FOV, FOV',
+          '• Target switch delay, Distance',
+          '• Bones selection (Head, Neck, Body, etc.)',
+          '• Hotkey selection',
+          '',
+          '**Misc**',
+          '• Disable weapon recoil (Danger)',
+          '• Show ammo count, Draw crosshair',
+          '',
+          '**Colors**',
+          '• Change color for visible/invisible',
+          '• Players, Bots, Wild players, Corpses',
+          '• My team, Knocked, Weapons',
+          '• All loot categories colors'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2, 24H2, 25H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT',
+          bios      : 'UEFI',
+          type      : 'External'
+        },
+        additional  : [
+          'Supported Resolutions: Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: Yes',
+          'Game Client: Steam & Official Launcher',
+          'Run from flash drive: Yes'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 116.750', price_usd: '$7.00'  },
+          { duration: '7 DAY',  price_idr: 'IDR 348.000', price_usd: '$20.00' },
+          { duration: '31 DAY', price_idr: 'IDR 706.250', price_usd: '$42.00' }
+        ]
+      },
+      {
+        id          : 'fecurity_abi',
+        name        : 'FECERITY : ABI',
+        emoji       : '<:fecurity:1480441522456494101>',
+        description: 'A premium product for the game Arena Breakout: Infinite from Fecurity group',
+        features    : [
+          '**Aim**',
+          '• Enable Aimbot',
+          '• Aim at shoot, Visible check',
+          '• Enemy only',
+          '• Changeable FOV (0 - 15°)',
+          '• Recoil compensation',
+          '• Draw FOV, Unique hitbox system',
+          '',
+          '**Visual (Player)**',
+          '• Enable/disable checkbox',
+          '• Enemy only, Box, Box outline',
+          '• Health, Shield, Skeleton',
+          '• Maximum distance',
+          '• Player info (nickname, distance, weapon)',
+          '',
+          '**Visual (Loot)**',
+          '• Enable/disable checkbox',
+          '• Maximum distance',
+          '• Loot ESP keybind',
+          '',
+          '**Misc**',
+          '• Different distance units (meters, yards, feet)'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2, 24H2, 25H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT & MBR',
+          bios      : 'UEFI',
+          type      : 'Hybrid'
+        },
+        additional  : [
+          'Supported Resolutions: Fullscreen, Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: Yes',
+          'Game Client: Steam',
+          'In-built Spoofer: Yes'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 120.000', price_usd: '$7.00'  },
+          { duration: '7 DAY',  price_idr: 'IDR 597.250', price_usd: '$35.00' },
+          { duration: '30 DAY', price_idr: 'IDR 1.248.750', price_usd: '$75.00' }
+        ]
+      },
+      {
+        id          : 'btg_abi',
+        name        : 'BTG : ABI',
+        emoji       : '<:btg:1480454682492010587>',
+        description: 'A premium product for the game Arena Breakout: Infinite from Break The Game group',
+        features    : [
+          '**Visual (Players)**',
+          '• 2D Boxes, Filled Boxes',
+          '• Lines (Line Type)',
+          '• Distance, Nicknames',
+          '• Drawing Bots, Skeleton',
+          '• Head, Squad ID',
+          '• Health (Health Type)',
+          '• Distance actors',
+          '',
+          '**Visual (Bots)**',
+          '• 2D Boxes, Filled Boxes',
+          '• Lines (Line Type)',
+          '• Distance, Nicknames',
+          '• Drawing Bots, Skeleton',
+          '• Head, Squad ID',
+          '• Health (Health Type)',
+          '• Distance actors',
+          '',
+          '**ESP Color**',
+          '• Changing the color to suit your tasks',
+          '',
+          '**Others**',
+          '• Button to show/hide program menu',
+          '• Switching between languages'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2, 24H2, 25H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT',
+          bios      : 'UEFI',
+          type      : 'External'
+        },
+        additional  : [
+          'Supported Resolutions: Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: Yes',
+          'Game Client: Official Launcher'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 142.500', price_usd: '$8.50'  },
+          { duration: '7 DAY',  price_idr: 'IDR 486.000', price_usd: '$28.00' },
+          { duration: '30 DAY', price_idr: 'IDR 1.066.750', price_usd: '$64.00' }
+        ]
+      },
+      {
+        id          : 'mason_abi',
+        name        : 'MASON : ABI (AIM ONLY)',
+        emoji       : '<:mason:1480493976413798471>',
+        description: 'A premium product for the game Arena Breakout: Infinite from Mason group',
+        features    : [
+          '**Aimbot**',
+          '• Key (Right mouse button, cannot be changed)',
+          '• F1 / Increase FOV',
+          '• F2 / Reduce FOV',
+          '• F3 / Increase smoothness',
+          '• F4 / Reduce smoothness',
+          '• F5 / Reset all settings'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT',
+          bios      : 'UEFI',
+          type      : 'External'
+        },
+        additional  : [
+          'Supported Resolutions: Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: Yes',
+          'Game Client: Official Launcher'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 55.750',  price_usd: '$3.00'  },
+          { duration: '7 DAY',  price_idr: 'IDR 212.750', price_usd: '$12.00' },
+          { duration: '30 DAY', price_idr: 'IDR 389.250', price_usd: '$23.00' }
+        ]
+      },
+      {
+        id          : 'ghost_radar_abi',
+        name        : 'GHOST : ABI (RADAR)',
+        emoji       : '<:ghost:1480493993048539236>',
+        description: 'A premium product for the game Arena Breakout: Infinite from Ghost group',
+        features    : [
+          '**Players**',
+          '• Show Players, Price, Distance',
+          '• Show Name, Direction',
+          '• Show Team, Team ID',
+          '',
+          '**Bots**',
+          '• Show Bots, Price, Distance',
+          '• Show Name, Direction',
+          '',
+          '**Corpses**',
+          '• Show Corpses, Price, Distance'
+        ],
+        system      : {
+          processors: 'Intel & AMD',
+          os        : 'Windows 10 (all build) & 11 (build 21H2, 22H2, 23H2, 24H2, 25H2)',
+          graphics  : 'Nvidia & AMD',
+          disk      : 'GPT & MBR',
+          bios      : 'UEFI & Legacy',
+          type      : 'Internal'
+        },
+        additional  : [
+          'Supported Resolutions: Fullscreen, Borderless & Windowed',
+          'Supported Game Mode: Any',
+          'StreamProof: No',
+          'Game Client: Official Game Launcher, Steam & Epic Games',
+          'Run from flash drive: Yes'
+        ],
+        prices      : [
+          { duration: '1 DAY',  price_idr: 'IDR 110.250', price_usd: '$6.00'  },
+          { duration: '7 DAY',  price_idr: 'IDR 394.000', price_usd: '$20.50' },
+          { duration: '30 DAY', price_idr: 'IDR 768.000',  price_usd: '$45.00' }
+        ]
+      }
+    ]
+  },
   apex_legends: {
     id          : 'apex_legends',
     name        : 'APEX LEGENDS',
