@@ -7,17 +7,17 @@ const __catalog_games = {
   pubg_mobile: {
     id        : 'pubg_mobile',
     name      : 'PUBG MOBILE',
-    emoji     : '<:pubg:1478923070436806758>',
+    emoji     : '<:pubg:1480374737833037844>',
     platforms: {
       android: {
         id          : 'android',
         name        : 'ANDROID',
-        emoji       : '<:android:1479381355342069770>',
+        emoji       : '<:android:1480374496119750676>',
         cheats: [
           {
             id          : 'tantedara',
             name        : 'TANTEDARA PLUGIN INDONESIA',
-            emoji       : '<:tantedara:1479381425961832500>',
+            emoji       : '<:tantedara:1480374560611373116>',
             prices      : [
               { duration: '3 Days',  price: '70k'  },
               { duration: '7 Days',  price: '120k' },
@@ -28,7 +28,7 @@ const __catalog_games = {
           {
             id          : 'king_android',
             name        : 'KING Android',
-            emoji       : '<:kingandroid:1479381392843604106>',
+            emoji       : '<:kingandroid:1480374529871183872>',
             description: 'Key Suport KING Android ( Non Root & Root )',
             features    : [
               'ESP | AIMBOT',
@@ -44,7 +44,7 @@ const __catalog_games = {
           {
             id          : 'shield',
             name        : 'SHIELD',
-            emoji       : '<:shield:1479381416054886531>',
+            emoji       : '<:shield:1480374551094493224>',
             description: 'Global | KR | VN | TW - Loader ( Non Root )',
             features    : [
               'ESP | Aimbot Smoth Aim',
@@ -63,12 +63,12 @@ const __catalog_games = {
       ios: {
         id          : 'ios',
         name        : 'IOS',
-        emoji       : '<:ios:1479381366620684470>',
+        emoji       : '<:apple:1480382759620055090>',
         cheats      : [
           {
             id          : 'king_ios',
             name        : 'KING iOS',
-            emoji       : '<:kingios:1479381376523567154>',
+            emoji       : '<:kingios:1480374517355253762>',
             description: 'PUBG iOS - GL / KR / VNG / TW (IPA)',
             features    : [
               'ESP',
@@ -85,7 +85,7 @@ const __catalog_games = {
           {
             id          : 'oasis',
             name        : 'OASIS iOS',
-            emoji       : '<:oasis:1479381403878690900>',
+            emoji       : '<:oasis:1480374540189302927>',
             description: 'PUBG Global | Korea | Vietnam - ( IPA )',
             features    : [
               'ESP | Aimbot',
@@ -106,61 +106,61 @@ const __catalog_games = {
   mobile_legends: {
     id    : 'mobile_legends',
     name  : 'MOBILE LEGENDS',
-    emoji : '<:mlbb:1478923159758438511>',
+    emoji : '<:mlbb:1480374722607972495>',
     status: 'coming_soon'
   },
   free_fire: {
     id    : 'free_fire',
     name  : 'FREE FIRE',
-    emoji : '<:ff:1478923235151183970>',
+    emoji : '<:ff:1480374695202394345>',
     status: 'coming_soon'
   },
   valorant_mobile: {
     id    : 'valorant_mobile',
     name  : 'VALORANT MOBILE',
-    emoji : '<:valom:1478923497559560293>',
+    emoji : '<:valom:1480374754090422393>',
     status: 'coming_soon'
   },
   delta_force_mobile: {
     id    : 'delta_force_mobile',
     name  : 'DELTA FORCE MOBILE',
-    emoji : '<:dfm:1478923509949530265>',
+    emoji : '<:dfm:1480374681549799537>',
     status: 'coming_soon'
   },
   blood_strike: {
     id    : 'blood_strike',
     name  : 'BLOOD STRIKE',
-    emoji : '<:bloodstrike:1478923684080259365>',
+    emoji : '<:bloodstrike:1480374640034578534>',
     status: 'coming_soon'
   },
   cod_mobile: {
     id    : 'cod_mobile',
     name  : 'CALL OF DUTY MOBILE',
-    emoji : '<:codm:1478923521072562358>',
+    emoji : '<:codm:1480374652072235211>',
     status: 'coming_soon'
   },
   ball_pool: {
     id    : 'ball_pool',
     name  : '8 BALL POOL',
-    emoji : '<:8bp:1478923764485066832>',
+    emoji : '<:8bp:1480374598741524603>',
     status: 'coming_soon'
   },
   cross_fire: {
     id    : 'cross_fire',
     name  : 'CROSS FIRE',
-    emoji : '<:crossfire:1478924029976121364>',
+    emoji : '<:crossfire:1480374665934405842>',
     status: 'coming_soon'
   },
   honor_of_kings: {
     id    : 'honor_of_kings',
     name  : 'HONOR OF KINGS',
-    emoji : '<:hok:1478924442381062174>',
+    emoji : '<:hok:1480374708145881088>',
     status: 'coming_soon'
   },
   arena_of_valor: {
     id    : 'arena_of_valor',
     name  : 'ARENA OF VALOR',
-    emoji : '<:aovstorenew:1478924461888635053>',
+    emoji : '<:aovstorenew:1480374628315697163>',
     status: 'coming_soon'
   }
 };
