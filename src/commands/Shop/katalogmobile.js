@@ -19,19 +19,17 @@ module.exports = {
     try {
       // - GET CATALOG EMBED - \\
       console.log('[CATALOG] Creating catalog embed...');
-      const result = create_main_catalog_embed();
+      const container = create_main_catalog_embed();
 
-      if (!result) {
+      if (!container) {
         throw new Error('create_main_catalog_embed returned null');
       }
-
-      const { container, select_row } = result;
 
       console.log('[CATALOG] Embed created, sending reply...');
 
       // - SEND REPLY - \\
       await interaction.editReply({
-        components : [container, select_row],
+        components : [container],
         flags      : MessageFlags.IsComponentsV2
       });
 
@@ -42,7 +40,6 @@ module.exports = {
 
       // - SEND ERROR MESSAGE - \\
       const error_container = new ContainerBuilder()
-        .setAccentColor(0xFF0000)
         .addTextDisplayComponents(
           new TextDisplayBuilder()
             .setContent(`❌ Failed to load catalog.\n\n**Error:** \`${error.message}\`\n\nPlease try again later.`)

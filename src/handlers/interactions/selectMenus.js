@@ -50,13 +50,12 @@ async function handleSelectMenus(client, interaction) {
         // - CATALOG GAME SELECT - \\
         if (interaction.customId === 'catalog_game_select') {
             const selected_game = interaction.values[0];
-            const result        = create_platform_select_embed(selected_game);
+            const container     = create_platform_select_embed(selected_game);
 
-            if (!result) {
+            if (!container) {
                 const error_text = new TextDisplayBuilder()
                     .setContent('❌ Game not found or coming soon!');
                 const error_container = new ContainerBuilder()
-                    .setAccentColor(0xFF0000)
                     .addTextDisplayComponents(error_text);
 
                 return await interaction.reply({
@@ -65,10 +64,8 @@ async function handleSelectMenus(client, interaction) {
                 });
             }
 
-            const { container, select_row } = result;
-
             await interaction.reply({
-                components : [container, select_row],
+                components : [container],
                 flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
@@ -83,13 +80,12 @@ async function handleSelectMenus(client, interaction) {
 
             console.log(`[CATALOG] Platform selected - Game: ${game_id}, Platform: ${platform_id}, Raw: ${selected_value}`);
 
-            const result = create_cheat_select_embed(game_id, platform_id);
+            const container = create_cheat_select_embed(game_id, platform_id);
 
-            if (!result) {
+            if (!container) {
                 const error_text = new TextDisplayBuilder()
                     .setContent(`❌ Platform not found!\n\nGame: \`${game_id}\`\nPlatform: \`${platform_id}\``);
                 const error_container = new ContainerBuilder()
-                    .setAccentColor(0xFF0000)
                     .addTextDisplayComponents(error_text);
 
                 return await interaction.update({
@@ -98,10 +94,8 @@ async function handleSelectMenus(client, interaction) {
                 });
             }
 
-            const { container, select_row } = result;
-
             await interaction.update({
-                components : [container, select_row],
+                components : [container],
                 flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
@@ -117,13 +111,12 @@ async function handleSelectMenus(client, interaction) {
 
             console.log(`[CATALOG] Cheat selected - Game: ${game_id}, Platform: ${platform_id}, Cheat: ${cheat_id}`);
 
-            const result = create_cheat_detail_embed(game_id, platform_id, cheat_id);
+            const container = create_cheat_detail_embed(game_id, platform_id, cheat_id);
 
-            if (!result) {
+            if (!container) {
                 const error_text = new TextDisplayBuilder()
                     .setContent('❌ Cheat details not found!');
                 const error_container = new ContainerBuilder()
-                    .setAccentColor(0xFF0000)
                     .addTextDisplayComponents(error_text);
 
                 return await interaction.update({
@@ -132,11 +125,10 @@ async function handleSelectMenus(client, interaction) {
                 });
             }
 
-            const { container, button_row } = result;
-            const back_row                  = create_back_button();
+            const back_row = create_back_button();
 
             await interaction.update({
-                components : [container, button_row, back_row],
+                components : [container, back_row],
                 flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
@@ -145,10 +137,10 @@ async function handleSelectMenus(client, interaction) {
         // - CATALOG BACK TO MAIN - \\
         if (interaction.customId === 'catalog_back_to_main') {
             const { create_main_catalog_embed } = require('../../shared/catalog/catalog_controller');
-            const { container, select_row }     = create_main_catalog_embed();
+            const container                     = create_main_catalog_embed();
 
             await interaction.update({
-                components : [container, select_row],
+                components : [container],
                 flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;

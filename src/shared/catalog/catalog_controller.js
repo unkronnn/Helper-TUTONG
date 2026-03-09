@@ -14,11 +14,9 @@ const { get_all_games, get_game_by_id, get_platform, get_cheat } = require('./ca
 
 /**
  * Create main catalog embed with game selection
- * @return {Object} Container and select menu components
+ * @return {Object} Container with embedded select menu
  */
 function create_main_catalog_embed() {
-  const __accent_color = parseInt(config.primaryColor, 16);
-
   // - BUILD HEADER - \\
   const header_text = new TextDisplayBuilder()
     .setContent('# Mobile Area\n\nSelect a game to view available cheats');
@@ -55,23 +53,22 @@ function create_main_catalog_embed() {
 
   // - BUILD CONTAINER - \\
   const container = new ContainerBuilder()
-    .setAccentColor(__accent_color)
     .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1)
     .addTextDisplayComponents(games_display)
-    .addSeparatorComponents(separator2);
+    .addSeparatorComponents(separator2)
+    .addActionRowComponents(select_row);
 
-  return { container, select_row };
+  return container;
 }
 
 /**
  * Create platform selection embed for a game
  * @param {string} game_id
- * @return {Object} Container and select menu components
+ * @return {Object} Container with embedded select menu
  */
 function create_platform_select_embed(game_id) {
-  const __accent_color = parseInt(config.primaryColor, 16);
-  const game           = get_game_by_id(game_id);
+  const game = get_game_by_id(game_id);
 
   if (!game || !game.platforms) {
     return null;
@@ -111,25 +108,24 @@ function create_platform_select_embed(game_id) {
 
   // - BUILD CONTAINER - \\
   const container = new ContainerBuilder()
-    .setAccentColor(__accent_color)
     .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1)
     .addTextDisplayComponents(platforms_display)
-    .addSeparatorComponents(separator2);
+    .addSeparatorComponents(separator2)
+    .addActionRowComponents(select_row);
 
-  return { container, select_row };
+  return container;
 }
 
 /**
  * Create cheat selection embed for a platform
  * @param {string} game_id
  * @param {string} platform_id
- * @return {Object} Container and select menu components
+ * @return {Object} Container with embedded select menu
  */
 function create_cheat_select_embed(game_id, platform_id) {
-  const __accent_color = parseInt(config.primaryColor, 16);
-  const game           = get_game_by_id(game_id);
-  const platform       = get_platform(game_id, platform_id);
+  const game     = get_game_by_id(game_id);
+  const platform = get_platform(game_id, platform_id);
 
   if (!game || !platform || !platform.cheats) {
     return null;
@@ -168,13 +164,13 @@ function create_cheat_select_embed(game_id, platform_id) {
 
   // - BUILD CONTAINER - \\
   const container = new ContainerBuilder()
-    .setAccentColor(__accent_color)
     .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1)
     .addTextDisplayComponents(cheats_display)
-    .addSeparatorComponents(separator2);
+    .addSeparatorComponents(separator2)
+    .addActionRowComponents(select_row);
 
-  return { container, select_row };
+  return container;
 }
 
 /**
@@ -182,13 +178,12 @@ function create_cheat_select_embed(game_id, platform_id) {
  * @param {string} game_id
  * @param {string} platform_id
  * @param {string} cheat_id
- * @return {Object} Container with cheat details
+ * @return {Object} Container with embedded buttons
  */
 function create_cheat_detail_embed(game_id, platform_id, cheat_id) {
-  const __accent_color = parseInt(config.primaryColor, 16);
-  const game           = get_game_by_id(game_id);
-  const platform       = get_platform(game_id, platform_id);
-  const cheat          = get_cheat(game_id, platform_id, cheat_id);
+  const game     = get_game_by_id(game_id);
+  const platform = get_platform(game_id, platform_id);
+  const cheat    = get_cheat(game_id, platform_id, cheat_id);
 
   if (!game || !platform || !cheat) {
     return null;
@@ -202,15 +197,19 @@ function create_cheat_detail_embed(game_id, platform_id, cheat_id) {
 
   // - BUILD DESCRIPTION - \\
   const container = new ContainerBuilder()
-    .setAccentColor(__accent_color)
     .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1);
 
   if (cheat.description) {
-    const description_text = new TextDisplayBuilder()
-      .setContent(`**Description:**\n${cheat.description}`);
+    const description_label = new TextDisplayBuilder()
+      .setContent('**Description**');
 
-    container.addTextDisplayComponents(description_text);
+    const description_text = new TextDisplayBuilder()
+      .setContent(cheat.description);
+
+    container
+      .addTextDisplayComponents(description_label)
+      .addTextDisplayComponents(description_text);
 
     const separator2 = new SeparatorBuilder();
     container.addSeparatorComponents(separator2);
@@ -218,25 +217,35 @@ function create_cheat_detail_embed(game_id, platform_id, cheat_id) {
 
   // - BUILD FEATURES - \\
   if (cheat.features && cheat.features.length > 0) {
-    const features_text = new TextDisplayBuilder()
-      . setContent(`**Features:**\n${cheat.features.map(f => `• ${f}`).join('\n')}`);
+    const features_label = new TextDisplayBuilder()
+      .setContent('**Features**');
 
-    container.addTextDisplayComponents(features_text);
+    const features_text = new TextDisplayBuilder()
+      .setContent(cheat.features.map(f => `• ${f}`).join('\n'));
+
+    container
+      .addTextDisplayComponents(features_label)
+      .addTextDisplayComponents(features_text);
 
     const separator3 = new SeparatorBuilder();
     container.addSeparatorComponents(separator3);
   }
 
-  // - BUILD PRICES - \\
+  // - BUILD PRICING - \\
   if (cheat.prices && cheat.prices.length > 0) {
+    const pricing_label = new TextDisplayBuilder()
+      .setContent('**Pricing**');
+
     const prices_text = cheat.prices
       .map(p => `**${p.duration}**\n${p.price}`)
       .join('\n\n');
 
     const pricing_display = new TextDisplayBuilder()
-      .setContent(`**Pricing:**\n${prices_text}`);
+      .setContent(prices_text);
 
-    container.addTextDisplayComponents(pricing_display);
+    container
+      .addTextDisplayComponents(pricing_label)
+      .addTextDisplayComponents(pricing_display);
 
     const separator4 = new SeparatorBuilder();
     container.addSeparatorComponents(separator4);
@@ -249,8 +258,9 @@ function create_cheat_detail_embed(game_id, platform_id, cheat_id) {
     .setStyle(ButtonStyle.Link);
 
   const button_row = new ActionRowBuilder().addComponents(buy_button);
+  container.addActionRowComponents(button_row);
 
-  return { container, button_row };
+  return container;
 }
 
 /**
