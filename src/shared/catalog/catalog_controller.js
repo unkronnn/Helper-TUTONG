@@ -7,8 +7,7 @@ const {
   StringSelectMenuOptionBuilder,
   SeparatorSpacingSize,
   ButtonBuilder,
-  ButtonStyle,
-  SectionBuilder
+  ButtonStyle
 } = require('discord.js');
 const config = require('../../config/config.json');
 const { get_all_games, get_game_by_id, get_platform, get_cheat } = require('./catalog_data');
@@ -20,12 +19,9 @@ const { get_all_games, get_game_by_id, get_platform, get_cheat } = require('./ca
 function create_main_catalog_embed() {
   const __accent_color = parseInt(config.primaryColor, 16);
 
-  // - BUILD HEADER WITH SECTION - \\
-  const title_section = new SectionBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('# Mobile Area'),
-      new TextDisplayBuilder().setContent('Select a game to view available cheats')
-    );
+  // - BUILD HEADER - \\
+  const header_text = new TextDisplayBuilder()
+    .setContent('# Mobile Area\n\nSelect a game to view available cheats');
 
   const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
 
@@ -60,7 +56,7 @@ function create_main_catalog_embed() {
   // - BUILD CONTAINER - \\
   const container = new ContainerBuilder()
     .setAccentColor(__accent_color)
-    .addSectionComponents(title_section)
+    .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1)
     .addTextDisplayComponents(games_display)
     .addSeparatorComponents(separator2);
@@ -81,12 +77,9 @@ function create_platform_select_embed(game_id) {
     return null;
   }
 
-  // - BUILD HEADER WITH SECTION - \\
-  const title_section = new SectionBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`# ${game.emoji} ${game.name}`),
-      new TextDisplayBuilder().setContent('Select platform to view available cheats')
-    );
+  // - BUILD HEADER - \\
+  const header_text = new TextDisplayBuilder()
+    .setContent(`# ${game.emoji} ${game.name}\n\nSelect platform to view available cheats`);
 
   const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
 
@@ -119,7 +112,7 @@ function create_platform_select_embed(game_id) {
   // - BUILD CONTAINER - \\
   const container = new ContainerBuilder()
     .setAccentColor(__accent_color)
-    .addSectionComponents(title_section)
+    .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1)
     .addTextDisplayComponents(platforms_display)
     .addSeparatorComponents(separator2);
@@ -142,12 +135,9 @@ function create_cheat_select_embed(game_id, platform_id) {
     return null;
   }
 
-  // - BUILD HEADER WITH SECTION - \\
-  const title_section = new SectionBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`# ${platform.emoji} ${platform.name} - ${game.name}`),
-      new TextDisplayBuilder().setContent('Select a cheat to view details')
-    );
+  // - BUILD HEADER - \\
+  const header_text = new TextDisplayBuilder()
+    .setContent(`# ${platform.emoji} ${platform.name} - ${game.name}\n\nSelect a cheat to view details`);
 
   const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
 
@@ -179,7 +169,7 @@ function create_cheat_select_embed(game_id, platform_id) {
   // - BUILD CONTAINER - \\
   const container = new ContainerBuilder()
     .setAccentColor(__accent_color)
-    .addSectionComponents(title_section)
+    .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1)
     .addTextDisplayComponents(cheats_display)
     .addSeparatorComponents(separator2);
@@ -204,19 +194,16 @@ function create_cheat_detail_embed(game_id, platform_id, cheat_id) {
     return null;
   }
 
-  // - BUILD HEADER WITH SECTION - \\
-  const title_section = new SectionBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`# ${cheat.emoji} ${cheat.name}`),
-      new TextDisplayBuilder().setContent(`${platform.emoji} ${platform.name} - ${game.name}`)
-    );
+  // - BUILD HEADER - \\
+  const header_text = new TextDisplayBuilder()
+    .setContent(`# ${cheat.emoji} ${cheat.name}\n${platform.emoji} ${platform.name} - ${game.name}`);
 
   const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
 
   // - BUILD DESCRIPTION - \\
   const container = new ContainerBuilder()
     .setAccentColor(__accent_color)
-    .addSectionComponents(title_section)
+    .addTextDisplayComponents(header_text)
     .addSeparatorComponents(separator1);
 
   if (cheat.description) {
