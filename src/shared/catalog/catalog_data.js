@@ -697,7 +697,84 @@ const __catalog_games = {
     id    : 'arena_of_valor',
     name  : 'ARENA OF VALOR',
     emoji : '<:aovstorenew:1480374628315697163>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'aov_garena_tw',
+            name        : 'AOV GARENA TW',
+            emoji       : '<:aovgarenatwandro:1480417295049166950>',
+            description: 'AOV Garena Taiwan Server - Android (Non Root)',
+            features    : [
+              'Line Prediction',
+              'Auto Aim'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 60.000' },
+              { duration: '7 days', price: 'Rp 250.000' },
+              { duration: '30 days', price: 'Rp 480.000' }
+            ]
+          },
+          {
+            id          : 'gp_aov_rov',
+            name        : 'GP+ AOV / ROV Android',
+            emoji       : '<:gpaovrovandro:1480417270768603308>',
+            description: 'AOV / ROV / LQMB - Android (Non Root)',
+            features    : [
+              'ESP Enemy',
+              'Drone View'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 25.000' },
+              { duration: '7 days',  price: 'Rp 50.000' },
+              { duration: '30 days', price: 'Rp 100.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'aov_garena_tw_ios',
+            name        : 'AOV GARENA TW iOS',
+            emoji       : '<:aovgarenatwios:1480417310899703879>',
+            description: 'AOV Garena Taiwan Server - iOS (IPA / LINK)',
+            features    : [
+              'ESP',
+              'Auto Aim',
+              'Drone View',
+              'Map Hack'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 60.000' },
+              { duration: '7 days', price: 'Rp 250.000' },
+              { duration: '30 days', price: 'Rp 480.000' }
+            ]
+          },
+          {
+            id          : 'aov_garena_vn_ios',
+            name        : 'AOV GARENA VN iOS',
+            emoji       : '<:aovgarenavnios:1480417284345561261>',
+            description: 'AOV Garena Vietnam Server - iOS (IPA / LINK)',
+            features    : [
+              'ESP | Auto Aim',
+              'Hide ESP Recording'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 250.000' }
+            ]
+          }
+        ]
+      }
+    }
   }
 };
 
