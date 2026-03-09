@@ -113,7 +113,83 @@ const __catalog_games = {
     id    : 'mobile_legends',
     name  : 'MOBILE LEGENDS',
     emoji : '<:mlbb:1480374722607972495>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'morella',
+            name        : 'MORELLA MLBB',
+            emoji       : '<:morella:1480389787339849811>',
+            description: 'Mobile Legends - Android (Non Root & Root)',
+            features    : [
+              'MapHack',
+              'Drone View',
+              'Aimbot',
+              'Auto Skills',
+              'ESP'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 30.000' },
+              { duration: '7 days',  price: 'Rp 50.000' },
+              { duration: '30 days', price: 'Rp 100.000' },
+              { duration: '60 days', price: 'Rp 180.000' },
+              { duration: '90 days', price: 'Rp 270.000' }
+            ]
+          },
+          {
+            id          : 'pulse',
+            name        : 'PULSE MLBB',
+            emoji       : '<:pulse:1480389802489806889>',
+            description: 'Mobile Legends - Android (Non Root & Root)',
+            features    : [
+              'MapHack',
+              'Drone View',
+              'Aimbot',
+              'Auto Skills',
+              'ESP'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 30.000' },
+              { duration: '7 days',  price: 'Rp 50.000' },
+              { duration: '30 days', price: 'Rp 100.000' },
+              { duration: '60 days', price: 'Rp 180.000' },
+              { duration: '90 days', price: 'Rp 270.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'fluorite',
+            name        : 'FLUORITE MLBB iOS',
+            emoji       : '<:fluorite:1480389775151206620>',
+            description: 'Mobile Legends - iOS (IPA)',
+            features    : [
+              'MapHack (Mini Map)',
+              'Drone View Camera',
+              'Aimbot / Auto Aim Skill (All Hero)',
+              'Auto Retribution',
+              'ESP Line, Box, Name dll',
+              'Info Cooldown',
+              'Room Info',
+              'Hide ESP Recording'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 50.000' },
+              { duration: '7 days', price: 'Rp 150.000' },
+              { duration: '30 days', price: 'Rp 350.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   free_fire: {
     id    : 'free_fire',
