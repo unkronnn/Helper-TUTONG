@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, MessageFlags, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder } = require('discord.js');
-const { get_all_bypass_services, create_bypass_service_detail_embed } = require('../../shared/catalog/bypass_val_controller');
+const { SlashCommandBuilder, MessageFlags, ContainerBuilder, TextDisplayBuilder } = require('discord.js');
+const { create_main_bypass_catalog_embed } = require('../../shared/catalog/bypass_val_controller');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,60 +17,23 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      // - SEND PERMANENT PANEL WITH ALL SERVICES - \\
-      console.log('[BYPASS VAL] Creating bypass panel...');
+      // - GET BYPASS CATALOG EMBED - \\
+      console.log('[BYPASS VAL] Creating bypass catalog embed...');
+      const container = create_main_bypass_catalog_embed();
 
-      const services = get_all_bypass_services();
+      if (!container) {
+        throw new Error('create_main_bypass_catalog_embed returned null');
+      }
 
-      // Header
-      const header_text = new TextDisplayBuilder()
-        .setContent('**VALORANT BYPASS SERVICES**\n\nSelect a service to view details:');
+      console.log('[BYPASS VAL] Embed created, sending reply...');
 
-      const separator1 = new SeparatorBuilder();
-
-      // Services list
-      let services_display = '**Available Services:**\n\n';
-      services.forEach(service => {
-        services_display += `${service.emoji} **${service.name}**\n`;
-        services_display += `└ ${service.description}\n\n`;
-      });
-
-      const services_text = new TextDisplayBuilder()
-        .setContent(services_display);
-
-      const separator2 = new SeparatorBuilder();
-
-      // Build main panel container
-      const mainPanel = new ContainerBuilder()
-        .addTextDisplayComponents(header_text)
-        .addSeparatorComponents(separator1)
-        .addTextDisplayComponents(services_text)
-        .addSeparatorComponents(separator2);
-
-      console.log('[BYPASS VAL] Sending bypass panel...');
-
-      // - SEND MAIN PANEL - \\
+      // - SEND REPLY - \\
       await interaction.editReply({
-        components : [mainPanel],
+        components : [container],
         flags      : MessageFlags.IsComponentsV2
       });
 
-      // - SEND SERVICE DETAIL EMBEDS (PUBLIC) - \\
-      // Send INSOLENCE embed
-      const insolenceEmbed = create_bypass_service_detail_embed('insolence');
-      await interaction.followUp({
-        components : [insolenceEmbed],
-        flags      : MessageFlags.IsComponentsV2
-      });
-
-      // Send DRASKOVIC embed
-      const draskovicEmbed = create_bypass_service_detail_embed('draskovic');
-      await interaction.followUp({
-        components : [draskovicEmbed],
-        flags      : MessageFlags.IsComponentsV2
-      });
-
-      console.log(`[BYPASS VAL] ${interaction.user.tag} viewed bypass panel`);
+      console.log(`[BYPASS VAL] ${interaction.user.tag} viewed bypass catalog`);
     } catch (error) {
       console.error('[BYPASS VAL ERROR]', error.message);
       console.error('[BYPASS VAL ERROR STACK]', error.stack);
