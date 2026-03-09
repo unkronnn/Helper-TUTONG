@@ -195,7 +195,139 @@ const __catalog_games = {
     id    : 'free_fire',
     name  : 'FREE FIRE',
     emoji : '<:ff:1480374695202394345>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'drip_non_root',
+            name        : 'DRIP FF NON ROOT',
+            emoji       : '<:dripnorot:1480393370789613588>',
+            description: 'Free Fire Max - Android (Non Root)',
+            features    : [
+              'ESP LINE | Aim Skill',
+              'Fly Jump',
+              'Aim Skill Cover | Speed Time',
+              'Teleport 8M | Auto Swap',
+              'GhostHack | Change Fire Color'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '15 days', price: 'Rp 180.000' },
+              { duration: '30 days', price: 'Rp 250.000' }
+            ]
+          },
+          {
+            id          : 'drip_root',
+            name        : 'DRIP FF ROOT',
+            emoji       : '<:driprot:1480393381757849741>',
+            description: 'Free Fire Max - Android (Root)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Fly Hack',
+              'Speed Hack',
+              'Teleport'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 250.000' }
+            ]
+          },
+          {
+            id          : 'hg_ff',
+            name        : 'HG FF ANDROID',
+            emoji       : '<:HGFF:1480393351974097017>',
+            description: 'Free Fire Max - Android (Non Root & Root)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Auto Headshot',
+              'Fly Hack',
+              'Speed Hack'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days',  price: 'Rp 60.000' },
+              { duration: '10 days', price: 'Rp 80.000' },
+              { duration: '30 days', price: 'Rp 150.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'fluorite_ff',
+            name        : 'FLUORITE FF iOS',
+            emoji       : '<:fluorite:1480389775151206620>',
+            description: 'Free Fire - iOS (IPA)',
+            features    : [
+              'ESP | Line, Box, Name, Health dll',
+              'Aimbot Fov / Auto Aim',
+              'Less Recoil',
+              'Fast Weapon Swap',
+              '120FPS',
+              'Reset Guest',
+              'Hide ESP Recording / Live'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 50.000' },
+              { duration: '7 days', price: 'Rp 150.000' },
+              { duration: '30 days', price: 'Rp 350.000' }
+            ]
+          },
+          {
+            id          : 'gbd_ff_pro',
+            name        : 'GBD FF iOS (PRO)',
+            emoji       : '<:gbdff:1480393392923086848>',
+            description: 'Free Fire - iOS (IPA) Extra Aim Kill Features',
+            features    : [
+              'ESP | Line, Box, Name, Health dll',
+              'Aimbot Fov / Auto Aim',
+              'Extra Aim Kill Features',
+              'Less Recoil',
+              'Fast Weapon Swap',
+              '120FPS',
+              'Reset Guest',
+              'Hide ESP Recording / Live'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 50.000' },
+              { duration: '7 days', price: 'Rp 150.000' },
+              { duration: '30 days', price: 'Rp 280.000' }
+            ]
+          },
+          {
+            id          : 'gbd_ff',
+            name        : 'GBD FREE FIRE iOS',
+            emoji       : '<:gbdffnopro:1480393405199679710>',
+            description: 'Free Fire - iOS (IPA)',
+            features    : [
+              'ESP | Line, Box, Name, Health dll',
+              'Aimbot Fov / Auto Aim',
+              'Less Recoil',
+              'Fast Weapon Swap',
+              '120FPS',
+              'Reset Guest',
+              'Hide ESP Recording / Live'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 250.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   valorant_mobile: {
     id    : 'valorant_mobile',
