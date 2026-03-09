@@ -34,7 +34,6 @@ function create_main_bypass_catalog_embed() {
   let services_display = '**Available Services:**\n\n';
   services.forEach(service => {
     services_display += `${service.emoji} **${service.name}**\n`;
-    services_display += `└ ${service.description}\n\n`;
   });
 
   const services_text = new TextDisplayBuilder()
@@ -42,12 +41,17 @@ function create_main_bypass_catalog_embed() {
 
   const separator2 = new SeparatorBuilder();
 
-  // Service select dropdown
-  const select_options = services.map(service => ({
-    label     : service.name,
-    value     : `bypass-${service.id}`,
-    description: service.description
-  }));
+  // Service select dropdown with custom emoji support
+  const select_options = services.map(service => {
+    // Extract emoji ID from custom emoji format <:name:id>
+    const emojiId = service.emoji.match(/:(\d{18,19})/)?.[1] || undefined;
+    return {
+      label     : service.name,
+      value     : `bypass-${service.id}`,
+      emoji     : emojiId,
+      description: service.description.substring(0, 80) + (service.description.length > 80 ? '...' : '')
+    };
+  });
 
   const service_select = new StringSelectMenuBuilder()
     .setCustomId('bypass_service_select')
@@ -117,7 +121,7 @@ function create_bypass_service_detail_embed(service_id) {
   if (service.highlights && service.highlights.length > 0) {
     highlights_display = '**Highlights:**\n\n';
     service.highlights.forEach(highlight => {
-      highlights_display += `• ${highlight}\n`;
+      highlights_display += `✓ ${highlight}\n`;
     });
   }
 

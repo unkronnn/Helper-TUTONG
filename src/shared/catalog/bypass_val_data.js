@@ -6,8 +6,8 @@
 const __bypass_val_services = {
   insolence: {
     id          : 'insolence',
-    name        : 'INSOLENCE',
-    emoji       : '⚡',
+    name        : 'INSOLENCE | VG Emulator',
+    emoji       : '<:insolence:1480503171188002928>',
     description: 'VG Emulator - Hardware & Identity Spoofing',
     features    : [
       '**Hardware & Identity Spoofing**',
@@ -38,8 +38,8 @@ const __bypass_val_services = {
   },
   draskovic: {
     id          : 'draskovic',
-    name        : 'DRASKOVIC',
-    emoji       : '🛡️',
+    name        : 'DRASKOVIC | EMULATOR VALORANT',
+    emoji       : '<:snapcat:1480503160102715412>',
     description: 'Emulator Valorant - Hardware & Identity Spoofing + Cheat Included',
     features    : [
       '**Hardware & Identity Spoofing**',
