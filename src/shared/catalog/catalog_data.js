@@ -758,7 +758,32 @@ const __catalog_games = {
     id    : 'honor_of_kings',
     name  : 'HONOR OF KINGS',
     emoji : '<:hok:1480374708145881088>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'gp_hok_android',
+            name        : 'GP+ HOK Android',
+            emoji       : '<:gphok:1480418659343143013>',
+            description: 'Honor of King - Android (Non Root)',
+            features    : [
+              'ESP Enemy',
+              'Drone View',
+              'Map Hack',
+              'Cooldown Info'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 25.000' },
+              { duration: '7 days',  price: 'Rp 50.000' },
+              { duration: '30 days', price: 'Rp 100.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   arena_of_valor: {
     id    : 'arena_of_valor',
