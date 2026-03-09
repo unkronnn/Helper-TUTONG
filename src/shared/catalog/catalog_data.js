@@ -339,7 +339,87 @@ const __catalog_games = {
     id    : 'delta_force_mobile',
     name  : 'DELTA FORCE MOBILE',
     emoji : '<:dfm:1480374681549799537>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'xproject',
+            name        : 'XPROJECT DFM - ROOT',
+            emoji       : '<:xproject:1480395619242868786>',
+            description: 'Garena & Global - Android (Root)',
+            features    : [
+              'ESP | Aimbot',
+              'Auto Prediction'
+            ],
+            prices      : [
+              { duration: '7 days',  price: 'Rp 150.000' },
+              { duration: '30 days', price: 'Rp 380.000' }
+            ]
+          },
+          {
+            id          : 'zolo',
+            name        : 'ZOLO Android',
+            emoji       : '<:zolo:1480395652709220382>',
+            description: 'Support PUBG & DFM - Android (Non Root & Root)',
+            features    : [
+              'ESP | Wide View',
+              'Aimbot (Temporarly hidden)'
+            ],
+            prices      : [
+              { duration: '1 day',   price: 'Rp 25.000' },
+              { duration: '3 days',  price: 'Rp 50.000' },
+              { duration: '7 days',  price: 'Rp 80.000' },
+              { duration: '14 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 180.000' },
+              { duration: '60 days', price: 'Rp 250.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'dragon_dfm',
+            name        : 'DRAGON DFM iOS',
+            emoji       : '<:dragondfm:1480395579602505749>',
+            description: 'DFM Garena & Global - iOS (IPA/Link)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'No Recoil',
+              'Speed Hack'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 50.000' },
+              { duration: '7 days', price: 'Rp 150.000' },
+              { duration: '30 days', price: 'Rp 280.000' }
+            ]
+          },
+          {
+            id          : 'ninja_dfm',
+            name        : 'NINJA DFM - ROOT',
+            emoji       : '<:ninjadfm:1480395601991565312>',
+            description: 'Garena & Chinese - Loader (Root)',
+            features    : [
+              'ESP | Aim Touch',
+              'Recoil Compensation',
+              'Hide ESP Recording / Live'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 280.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   blood_strike: {
     id    : 'blood_strike',
