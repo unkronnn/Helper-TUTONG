@@ -9,8 +9,8 @@ const {
   create_back_button
 } = require('../../shared/catalog/catalog_controller');
 const {
-  create_cheat_list_embed,
-  create_cheat_detail_embed as create_pc_cheat_detail_embed
+  create_cheat_list_embed: create_pc_cheat_list_embed,
+  create_cheat_detail_embed: create_pc_cheat_detail_embed
 } = require('../../shared/catalog/pc_catalog_controller');
 
 const paymentsFile = path.join(__dirname, '../../config/payments.json');
@@ -155,7 +155,7 @@ async function handleSelectMenus(client, interaction) {
         if (interaction.customId === 'pc_game_select') {
             const selected_game = interaction.values[0];
             const game_id       = selected_game.replace('pcgame-', '');
-            const container     = create_cheat_list_embed(game_id);
+            const container     = create_pc_cheat_list_embed(game_id);
 
             if (!container) {
                 const error_text = new TextDisplayBuilder()
@@ -221,7 +221,7 @@ async function handleSelectMenus(client, interaction) {
         // - PC BACK TO CHEATS - \\
         if (interaction.customId.startsWith('pc_back_cheats-')) {
             const game_id = interaction.customId.replace('pc_back_cheats-', '');
-            const container = create_cheat_list_embed(game_id);
+            const container = create_pc_cheat_list_embed(game_id);
 
             await interaction.update({
                 components : [container],
