@@ -574,7 +574,112 @@ const __catalog_games = {
     id    : 'ball_pool',
     name  : '8 BALL POOL',
     emoji : '<:8bp:1480374598741524603>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'ninja_8bp',
+            name        : 'NINJA.E 8BP ANDROID',
+            emoji       : '<:ninja8bp:1480404645611569223>',
+            description: 'NINJA Engine 8BP - Android (Non Root & Root)',
+            features    : [
+              'Line Prediction',
+              'Auto Play (Beta)',
+              'Draw Blocked Ball',
+              'Full Setting Line'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 120.000' },
+              { duration: '7 days',  price: 'Rp 220.000' },
+              { duration: '30 days', price: 'Rp 380.000' }
+            ]
+          },
+          {
+            id          : 'drip_8bp',
+            name        : 'DRIP 8BP Android',
+            emoji       : '<:drip8bp:1480404783297986764>',
+            description: '8BP - Android (Non Root)',
+            features    : [
+              'Autoplay',
+              'Draw Blocked Balls',
+              'Draw Prediction',
+              'Drawn Freeze Line',
+              'Draw All Players'
+            ],
+            prices      : [
+              { duration: '7 days',  price: 'Rp 100.000' },
+              { duration: '30 days', price: 'Rp 200.000' }
+            ]
+          },
+          {
+            id          : 'snake_8bp',
+            name        : 'SNAKE 8BP Android',
+            emoji       : '<:snake8bp:1480404664011722893>',
+            description: '8BP Android - Non Root',
+            features    : [
+              'Line Prediction',
+              'Auto Play',
+              'Auto Aim'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 100.000' },
+              { duration: '10 days', price: 'Rp 220.000' },
+              { duration: '30 days', price: 'Rp 420.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'gbd_8bp',
+            name        : 'GBD 8BP iOS',
+            emoji       : '<:GBD8bp:1480404741925376205>',
+            description: '8BP - iOS (IPA)',
+            features    : [
+              'Line Prediction',
+              'Aim Speed | Auto Aim',
+              'Extended Guidelines',
+              'Lines Transparency',
+              'Reset Guest Account',
+              'Import Shot Prediction',
+              'Hide ESP Recording / Live'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 40.000' },
+              { duration: '7 days', price: 'Rp 120.000' },
+              { duration: '30 days', price: 'Rp 250.000' }
+            ]
+          },
+          {
+            id          : 'wizard_8bp',
+            name        : 'WIZARD 8BP iOS',
+            emoji       : '<:wizard8bp:1480404625809997874>',
+            description: '8BP - iOS (IPA)',
+            features    : [
+              'Line Prediction',
+              'Aim Speed | Auto Aim',
+              'Extended Guidelines',
+              'Lines Transparency',
+              'Reset Guest Account',
+              'Import Shot Prediction',
+              'Hide ESP Recording / Live'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 65.000' },
+              { duration: '7 days', price: 'Rp 180.000' },
+              { duration: '30 days', price: 'Rp 380.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   cross_fire: {
     id    : 'cross_fire',
