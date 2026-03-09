@@ -59,17 +59,17 @@ async function handleSelectMenus(client, interaction) {
                     .setAccentColor(0xFF0000)
                     .addTextDisplayComponents(error_text);
 
-                return await interaction.update({
+                return await interaction.reply({
                     components : [error_container],
-                    flags      : MessageFlags.IsComponentsV2
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
                 });
             }
 
             const { container, select_row } = result;
 
-            await interaction.update({
+            await interaction.reply({
                 components : [container, select_row],
-                flags      : MessageFlags.IsComponentsV2
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
         }
@@ -77,19 +77,24 @@ async function handleSelectMenus(client, interaction) {
         // - CATALOG PLATFORM SELECT - \\
         if (interaction.customId === 'catalog_platform_select') {
             const selected_value = interaction.values[0];
-            const [game_id, platform_id] = selected_value.split('_');
-            const result                 = create_cheat_select_embed(game_id, platform_id);
+            const parts          = selected_value.split('_');
+            const game_id        = parts.slice(0, -1).join('_'); // Rejoin game_id if it has underscores
+            const platform_id    = parts[parts.length - 1];      // Last part is platform_id
+
+            console.log(`[CATALOG] Platform selected - Game: ${game_id}, Platform: ${platform_id}, Raw: ${selected_value}`);
+
+            const result = create_cheat_select_embed(game_id, platform_id);
 
             if (!result) {
                 const error_text = new TextDisplayBuilder()
-                    .setContent('❌ Platform not found!');
+                    .setContent(`❌ Platform not found!\n\nGame: \`${game_id}\`\nPlatform: \`${platform_id}\``);
                 const error_container = new ContainerBuilder()
                     .setAccentColor(0xFF0000)
                     .addTextDisplayComponents(error_text);
 
                 return await interaction.update({
                     components : [error_container],
-                    flags      : MessageFlags.IsComponentsV2
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
                 });
             }
 
@@ -97,7 +102,7 @@ async function handleSelectMenus(client, interaction) {
 
             await interaction.update({
                 components : [container, select_row],
-                flags      : MessageFlags.IsComponentsV2
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
         }
@@ -105,8 +110,14 @@ async function handleSelectMenus(client, interaction) {
         // - CATALOG CHEAT SELECT - \\
         if (interaction.customId === 'catalog_cheat_select') {
             const selected_value = interaction.values[0];
-            const [game_id, platform_id, cheat_id] = selected_value.split('_');
-            const result                           = create_cheat_detail_embed(game_id, platform_id, cheat_id);
+            const parts          = selected_value.split('_');
+            const game_id        = parts.slice(0, -2).join('_'); // Everything except last 2 parts
+            const platform_id    = parts[parts.length - 2];      // Second to last part
+            const cheat_id       = parts[parts.length - 1];      // Last part
+
+            console.log(`[CATALOG] Cheat selected - Game: ${game_id}, Platform: ${platform_id}, Cheat: ${cheat_id}`);
+
+            const result = create_cheat_detail_embed(game_id, platform_id, cheat_id);
 
             if (!result) {
                 const error_text = new TextDisplayBuilder()
@@ -117,7 +128,7 @@ async function handleSelectMenus(client, interaction) {
 
                 return await interaction.update({
                     components : [error_container],
-                    flags      : MessageFlags.IsComponentsV2
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
                 });
             }
 
@@ -126,7 +137,7 @@ async function handleSelectMenus(client, interaction) {
 
             await interaction.update({
                 components : [container, button_row, back_row],
-                flags      : MessageFlags.IsComponentsV2
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
         }
@@ -138,7 +149,7 @@ async function handleSelectMenus(client, interaction) {
 
             await interaction.update({
                 components : [container, select_row],
-                flags      : MessageFlags.IsComponentsV2
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
             });
             return;
         }
@@ -260,7 +271,24 @@ async function handleSelectMenus(client, interaction) {
         }
     } catch (err) {
         console.error('[SELECT MENU ERROR]', err.message);
-        // Silently fail if interaction is expired
+
+        // - TRY TO SEND ERROR MESSAGE - \\
+        try {
+            if (interaction && !interaction.replied && !interaction.deferred) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ An error occurred while processing your selection.');
+                const error_container = new ContainerBuilder()
+                    .setAccentColor(0xFF0000)
+                    .addTextDisplayComponents(error_text);
+
+                await interaction.reply({
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+                });
+            }
+        } catch (replyErr) {
+            console.error('[SELECT MENU REPLY ERROR]', replyErr.message);
+        }
     }
 }
 
