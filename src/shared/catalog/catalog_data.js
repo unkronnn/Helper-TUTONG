@@ -18,6 +18,12 @@ const __catalog_games = {
             id          : 'tantedara',
             name        : 'TANTEDARA PLUGIN INDONESIA',
             emoji       : '<:tantedara:1480374560611373116>',
+            description: 'Plugin Indonesia untuk PUBG Mobile Android',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Anti-Ban'
+            ],
             prices      : [
               { duration: '3 Days',  price: '70k'  },
               { duration: '7 Days',  price: '120k' },
