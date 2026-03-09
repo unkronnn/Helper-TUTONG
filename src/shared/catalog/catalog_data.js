@@ -425,7 +425,35 @@ const __catalog_games = {
     id    : 'blood_strike',
     name  : 'BLOOD STRIKE',
     emoji : '<:bloodstrike:1480374640034578534>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'vip_bloodstrike',
+            name        : 'VIP BLOODSTRIKE',
+            emoji       : '<:VIPBS:1480396838149558334>',
+            description: 'Blood Strike - Android (Non Root)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Vischeck',
+              'Magic Bullet',
+              'No Recoil',
+              'Speed & High Jump (HighRisk)',
+              'Skin Weapon'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 50.000' },
+              { duration: '7 days',  price: 'Rp 100.000' },
+              { duration: '30 days', price: 'Rp 200.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   cod_mobile: {
     id    : 'cod_mobile',
