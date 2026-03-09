@@ -185,5 +185,6 @@ function create_bypass_service_detail_embed(service_id) {
 
 module.exports = {
   create_main_bypass_catalog_embed,
-  create_bypass_service_detail_embed
+  create_bypass_service_detail_embed,
+  get_all_bypass_services
 };
