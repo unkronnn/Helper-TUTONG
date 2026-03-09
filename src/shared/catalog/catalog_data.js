@@ -459,7 +459,116 @@ const __catalog_games = {
     id    : 'cod_mobile',
     name  : 'CALL OF DUTY MOBILE',
     emoji : '<:codm:1480374652072235211>',
-    status: 'coming_soon'
+    platforms: {
+      android: {
+        id          : 'android',
+        name        : 'ANDROID',
+        emoji       : '<:android:1480374496119750676>',
+        cheats      : [
+          {
+            id          : 'morella_codm',
+            name        : 'MORELLA CODM',
+            emoji       : '<:morelacodm:1480399058895114321>',
+            description: 'Garena - Android (Non Root)',
+            features    : [
+              'ESP | AIM Assist',
+              'Aimbot | Less Recoil',
+              'Speed | Jump High'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 50.000' },
+              { duration: '7 days',  price: 'Rp 100.000' },
+              { duration: '30 days', price: 'Rp 150.000' }
+            ]
+          },
+          {
+            id          : 'vip_codm_garena',
+            name        : 'VIP CODM GARENA',
+            emoji       : '<:vipcodm:1480399082286612520>',
+            description: 'CODM Garena Version - Android (Non Root)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Bullet Track',
+              'Level Aimbot Smooth - Max',
+              'Wallhack',
+              'No Recoil',
+              'Spread',
+              'Fast Reload',
+              'No Shake',
+              'Fast Scope',
+              'Fast Switch',
+              'Hit Box'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 50.000' },
+              { duration: '7 days',  price: 'Rp 100.000' },
+              { duration: '30 days', price: 'Rp 200.000' }
+            ]
+          }
+        ]
+      },
+      ios: {
+        id          : 'ios',
+        name        : 'IOS',
+        emoji       : '<:apple:1480382759620055090>',
+        cheats      : [
+          {
+            id          : 'codm_gl_ios',
+            name        : 'CODM GL iOS',
+            emoji       : '<:codmgl:1480399016880509088>',
+            description: 'CODM iOS Global - (IPA)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Wallhack',
+              'No Recoil'
+            ],
+            prices      : [
+              { duration: '1 day',  price: 'Rp 50.000' },
+              { duration: '7 days', price: 'Rp 140.000' },
+              { duration: '30 days', price: 'Rp 280.000' }
+            ]
+          },
+          {
+            id          : 'gc3_codm_garena_ios',
+            name        : 'GC3 CODM GARENA iOS',
+            emoji       : '<:gc3:1480399041123717270>',
+            description: 'CODM Garena - iOS (IPA)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Wallhack',
+              'No Recoil',
+              'Anti-Ban'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 130.000' },
+              { duration: '7 days',  price: 'Rp 220.000' },
+              { duration: '30 days', price: 'Rp 400.000' }
+            ]
+          },
+          {
+            id          : 'gc3_codm_global_ios',
+            name        : 'GC3 CODM GLOBAL iOS',
+            emoji       : '<:gc3:1480399041123717270>',
+            description: 'CODM Global - iOS (IPA)',
+            features    : [
+              'ESP',
+              'Aimbot',
+              'Wallhack',
+              'No Recoil',
+              'Anti-Ban'
+            ],
+            prices      : [
+              { duration: '3 days',  price: 'Rp 130.000' },
+              { duration: '7 days',  price: 'Rp 220.000' },
+              { duration: '30 days', price: 'Rp 400.000' }
+            ]
+          }
+        ]
+      }
+    }
   },
   ball_pool: {
     id    : 'ball_pool',
