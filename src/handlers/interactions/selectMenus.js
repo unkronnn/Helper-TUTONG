@@ -8,6 +8,10 @@ const {
   create_cheat_detail_embed,
   create_back_button
 } = require('../../shared/catalog/catalog_controller');
+const {
+  create_cheat_list_embed,
+  create_cheat_detail_embed as create_pc_cheat_detail_embed
+} = require('../../shared/catalog/pc_catalog_controller');
 
 const paymentsFile = path.join(__dirname, '../../config/payments.json');
 
@@ -138,6 +142,86 @@ async function handleSelectMenus(client, interaction) {
         if (interaction.customId === 'catalog_back_to_main') {
             const { create_main_catalog_embed } = require('../../shared/catalog/catalog_controller');
             const container                     = create_main_catalog_embed();
+
+            await interaction.update({
+                components : [container],
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // ================== PC CATALOG HANDLERS ==================
+        // - PC GAME SELECT - \\
+        if (interaction.customId === 'pc_game_select') {
+            const selected_game = interaction.values[0];
+            const game_id       = selected_game.replace('pcgame-', '');
+            const container     = create_cheat_list_embed(game_id);
+
+            if (!container) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Game not found or coming soon!');
+                const error_container = new ContainerBuilder()
+                    .addTextDisplayComponents(error_text);
+
+                return await interaction.reply({
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+                });
+            }
+
+            await interaction.reply({
+                components : [container],
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // - PC CHEAT SELECT - \\
+        if (interaction.customId === 'pc_cheat_select') {
+            const selected_value = interaction.values[0];
+            const parts          = selected_value.split('-');
+            const game_id        = parts[1];
+            const cheat_id       = parts[2];
+
+            console.log(`[PC CATALOG] Cheat selected - Game: ${game_id}, Cheat: ${cheat_id}`);
+
+            const container = create_pc_cheat_detail_embed(game_id, cheat_id);
+
+            if (!container) {
+                const error_text = new TextDisplayBuilder()
+                    .setContent('❌ Cheat details not found!');
+                const error_container = new ContainerBuilder()
+                    .addTextDisplayComponents(error_text);
+
+                return await interaction.update({
+                    components : [error_container],
+                    flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+                });
+            }
+
+            await interaction.update({
+                components : [container],
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // - PC CATALOG BACK TO MAIN - \\
+        if (interaction.customId === 'pc_catalog_back') {
+            const { create_main_pc_catalog_embed } = require('../../shared/catalog/pc_catalog_controller');
+            const container                          = create_main_pc_catalog_embed();
+
+            await interaction.update({
+                components : [container],
+                flags      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // - PC BACK TO CHEATS - \\
+        if (interaction.customId.startsWith('pc_back_cheats-')) {
+            const game_id = interaction.customId.replace('pc_back_cheats-', '');
+            const container = create_cheat_list_embed(game_id);
 
             await interaction.update({
                 components : [container],

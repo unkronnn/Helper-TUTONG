@@ -87,6 +87,14 @@ async function handleInteraction(client, interaction) {
         // Handle buttons
         if (interaction.isButton()) {
             InputSanitizer.sanitizeString(interaction.customId);
+
+            // Handle catalog buttons
+            if (interaction.customId === 'pc_catalog_back' ||
+                interaction.customId.startsWith('pc_back_cheats-')) {
+                await handleSelectMenus(client, interaction);
+                return;
+            }
+
             await handleTicketInteractions(client, interaction);
             return;
         }
