@@ -218,7 +218,6 @@ module.exports = {
                     .setContent(`**• Submitted by:** <@${interaction.user.id}>`);
 
                 const testimonialContainer = new ContainerBuilder()
-                    .setAccentColor(parseInt(config.primaryColor, 16))
                     .addSectionComponents(headerSection)
                     .addSeparatorComponents(sep)
                     .addTextDisplayComponents(testimonialInfo)
@@ -299,7 +298,6 @@ module.exports = {
                     .addItems(new MediaGalleryItemBuilder().setURL(proof.url));
 
                 const testimonialContainer = new ContainerBuilder()
-                    .setAccentColor(parseInt(config.primaryColor, 16))
                     .addSectionComponents(headerSection)
                     .addSeparatorComponents(sep)
                     .addTextDisplayComponents(jokiInfo)
@@ -381,7 +379,6 @@ module.exports = {
                     .addItems(new MediaGalleryItemBuilder().setURL(proof.url));
 
                 const testimonialContainer = new ContainerBuilder()
-                    .setAccentColor(parseInt(config.primaryColor, 16))
                     .addSectionComponents(headerSection)
                     .addSeparatorComponents(sep)
                     .addTextDisplayComponents(transactionInfo)
