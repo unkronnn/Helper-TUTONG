@@ -77,9 +77,9 @@ async function handleSelectMenus(client, interaction) {
         // - CATALOG PLATFORM SELECT - \\
         if (interaction.customId === 'catalog_platform_select') {
             const selected_value = interaction.values[0];
-            const parts          = selected_value.split('_');
-            const game_id        = parts.slice(0, -1).join('_'); // Rejoin game_id if it has underscores
-            const platform_id    = parts[parts.length - 1];      // Last part is platform_id
+            const parts          = selected_value.split('-');
+            const game_id        = parts[0];
+            const platform_id    = parts[1];
 
             console.log(`[CATALOG] Platform selected - Game: ${game_id}, Platform: ${platform_id}, Raw: ${selected_value}`);
 
@@ -110,10 +110,10 @@ async function handleSelectMenus(client, interaction) {
         // - CATALOG CHEAT SELECT - \\
         if (interaction.customId === 'catalog_cheat_select') {
             const selected_value = interaction.values[0];
-            const parts          = selected_value.split('_');
-            const game_id        = parts.slice(0, -2).join('_'); // Everything except last 2 parts
-            const platform_id    = parts[parts.length - 2];      // Second to last part
-            const cheat_id       = parts[parts.length - 1];      // Last part
+            const parts          = selected_value.split('-');
+            const game_id        = parts[0];
+            const platform_id    = parts[1];
+            const cheat_id       = parts[2];
 
             console.log(`[CATALOG] Cheat selected - Game: ${game_id}, Platform: ${platform_id}, Cheat: ${cheat_id}`);
 
