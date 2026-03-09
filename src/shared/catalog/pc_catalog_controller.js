@@ -35,7 +35,7 @@ function create_main_pc_catalog_embed() {
   // Games list
   let games_display = '**Available Games:**\n\n';
   activeGames.forEach(game => {
-    games_display += `**${game.name}**\n`;
+    games_display += `${game.emoji} **${game.name}**\n`;
   });
 
   const games_text = new TextDisplayBuilder()
@@ -45,10 +45,13 @@ function create_main_pc_catalog_embed() {
 
   // Game select dropdown
   const select_options = activeGames.map(game => {
+    // Extract emoji ID from custom emoji format <:name:id>
+    const emojiId = game.emoji.match(/:(\d{18,19})/)?.[1] || undefined;
     return {
       label     : game.name,
       value     : `pcgame-${game.id}`,
-      description: game.description
+      emoji     : emojiId,
+      description: game.description.substring(0, 80) + (game.description.length > 80 ? '...' : '')
     };
   });
 
@@ -88,14 +91,14 @@ function create_cheat_list_embed(game_id) {
 
   // Header
   const header_text = new TextDisplayBuilder()
-    .setContent(`**${game.name}**\n\n${game.description}\n\nSelect a cheat to view details:`);
+    .setContent(`${game.emoji} **${game.name}**\n\n${game.description}\n\nSelect a cheat to view details:`);
 
   const separator1 = new SeparatorBuilder();
 
   // Cheats list
   let cheats_display = '**Available Cheats:**\n\n';
   game.cheats.forEach(cheat => {
-    cheats_display += `**${cheat.name}**\n`;
+    cheats_display += `${cheat.emoji} **${cheat.name}**\n`;
     cheats_display += `└ ${cheat.description}\n\n`;
   });
 
@@ -115,9 +118,12 @@ function create_cheat_list_embed(game_id) {
 
   // Cheat select dropdown
   const select_options = game.cheats.map(cheat => {
+    // Extract emoji ID from custom emoji format
+    const emojiId = cheat.emoji.match(/:(\d{18,19})/)?.[1] || undefined;
     return {
       label     : cheat.name,
       value     : `pccheat-${game_id}-${cheat.id}`,
+      emoji     : emojiId,
       description: cheat.description.substring(0, 50) + (cheat.description.length > 50 ? '...' : '')
     };
   });
@@ -161,7 +167,7 @@ function create_cheat_detail_embed(game_id, cheat_id) {
 
   // Header
   const header_text = new TextDisplayBuilder()
-    .setContent(`**${cheat.name}**\n*${cheat.description}*`);
+    .setContent(`${cheat.emoji} **${cheat.name}**\n*${cheat.description}*`);
 
   const separator1 = new SeparatorBuilder();
 
