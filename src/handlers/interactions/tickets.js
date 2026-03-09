@@ -39,6 +39,10 @@ async function handleTicketInteractions(client, interaction) {
             return await handleMiddlemanClaim(interaction, client);
         } else if (interaction.customId === 'middleman_close') {
             return await handleMiddlemanClose(interaction);
+        } else if (interaction.customId === 'middleman_form_buyer') {
+            return await handleMiddlemanFormBuyer(interaction);
+        } else if (interaction.customId === 'middleman_form_seller') {
+            return await handleMiddlemanFormSeller(interaction);
         }
 
         // Handle ticket join button
@@ -595,7 +599,6 @@ async function handleMiddlemanUserSelect(interaction, client) {
         }
 
         const threadName = `midman-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.primaryColor, 16);
 
         const newRequest = await middlemanChannel.threads.create({
             name: threadName,
@@ -608,12 +611,12 @@ async function handleMiddlemanUserSelect(interaction, client) {
         const closeBtn = new ButtonBuilder()
             .setCustomId('middleman_close')
             .setLabel('Close Ticket')
-            .setStyle(ButtonStyle.Danger);
+            .setStyle(ButtonStyle.Secondary);
 
         const claimBtn = new ButtonBuilder()
             .setCustomId('middleman_claim')
             .setLabel('Claim Ticket')
-            .setStyle(ButtonStyle.Primary);
+            .setStyle(ButtonStyle.Secondary);
 
         const addMemberBtn = new ButtonBuilder()
             .setCustomId('middleman_add')
@@ -699,7 +702,6 @@ async function handleMiddlemanUserSelect(interaction, client) {
                     const notifSep = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
 
                     const notifContainer = new ContainerBuilder()
-                        .setAccentColor(accentColor)
                         .addSectionComponents(notifTitle)
                         .addSeparatorComponents(notifSep)
                         .addTextDisplayComponents(requestDetails)
@@ -746,24 +748,35 @@ async function handleMiddlemanUserSelect(interaction, client) {
         }
 
         try {
-            const accentColor = parseInt(config.primaryColor, 16);
-            
             // Create response with separator
             const titleSection = new TextDisplayBuilder()
                 .setContent(`# HAJI UTONG - Middleman`);
-            
-            const separator = new SeparatorBuilder()
+
+            const separator1 = new SeparatorBuilder()
                 .setDivider(true)
                 .setSpacing(SeparatorSpacingSize.Large);
-            
+
+            const separator2 = new SeparatorBuilder()
+                .setDivider(true)
+                .setSpacing(SeparatorSpacingSize.Large);
+
             const descriptionSection = new TextDisplayBuilder()
-                .setContent(`Ticket kamu sudah dibuat: <#${newRequest.id}>\nHarap tunggu sampai Admin respon ke ticket kamu!`);
-            
+                .setContent(`Ticket kamu sudah dibuat!\nHarap tunggu sampai Admin respon ke ticket kamu!`);
+
+            // View ticket button
+            const viewBtn = new ButtonBuilder()
+                .setLabel('View Ticket')
+                .setStyle(ButtonStyle.Link)
+                .setURL(newRequest.url);
+
+            const buttonRow = new ActionRowBuilder().addComponents(viewBtn);
+
             const container = new ContainerBuilder()
-                .setAccentColor(accentColor)
                 .addTextDisplayComponents(titleSection)
-                .addSeparatorComponents(separator)
-                .addTextDisplayComponents(descriptionSection);
+                .addSeparatorComponents(separator1)
+                .addTextDisplayComponents(descriptionSection)
+                .addSeparatorComponents(separator2)
+                .addActionRowComponents(buttonRow);
 
             await interaction.editReply({
                 components: [container],
@@ -772,16 +785,14 @@ async function handleMiddlemanUserSelect(interaction, client) {
         } catch (ephemeralErr) {
             console.error('[MIDDLEMAN EPHEMERAL ERROR]', ephemeralErr);
             // Fallback to simple container
-            const accentColor = parseInt(config.primaryColor, 16);
             const fallbackContainer = new ContainerBuilder()
-                .setAccentColor(accentColor)
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(`# HAJI UTONG - Middleman`)
                 )
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(`✅ Ticket kamu sudah dibuat: <#${newRequest.id}>`)
                 );
-            
+
             try {
                 await interaction.editReply({
                     components: [fallbackContainer],
@@ -938,6 +949,86 @@ async function handleMiddlemanAddUser(interaction) {
         console.error('[MIDDLEMAN ADD MEMBER ERROR]', err.message);
         await replyWithError(interaction, `Failed to add user!\n\n**Error:** ${err.message}`);
     }
+}
+
+async function handleMiddlemanFormBuyer(interaction) {
+    const buyerModal = new ModalBuilder()
+        .setCustomId('middleman_buyer_form_modal')
+        .setTitle('Form Pembeli');
+
+    const namaInput = new TextInputBuilder()
+        .setCustomId('buyer_nama')
+        .setLabel('Nama Lengkap')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    const barangInput = new TextInputBuilder()
+        .setCustomId('buyer_barang')
+        .setLabel('Jenis Barang yang Dibeli')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    const hargaInput = new TextInputBuilder()
+        .setCustomId('buyer_harga')
+        .setLabel('Harga Barang (Rp)')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('Contoh: 500000')
+        .setRequired(true);
+
+    const ketInput = new TextInputBuilder()
+        .setCustomId('buyer_ket')
+        .setLabel('Keterangan Tambahan')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Inc/Ex, Reffull/Noreff, dll')
+        .setRequired(false);
+
+    const row1 = new ActionRowBuilder().addComponents(namaInput);
+    const row2 = new ActionRowBuilder().addComponents(barangInput);
+    const row3 = new ActionRowBuilder().addComponents(hargaInput);
+    const row4 = new ActionRowBuilder().addComponents(ketInput);
+
+    buyerModal.addComponents(row1, row2, row3, row4);
+    return await interaction.showModal(buyerModal);
+}
+
+async function handleMiddlemanFormSeller(interaction) {
+    const sellerModal = new ModalBuilder()
+        .setCustomId('middleman_seller_form_modal')
+        .setTitle('Form Penjual');
+
+    const namaInput = new TextInputBuilder()
+        .setCustomId('seller_nama')
+        .setLabel('Nama Lengkap')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    const barangInput = new TextInputBuilder()
+        .setCustomId('seller_barang')
+        .setLabel('Jenis Barang yang Dijual')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    const hargaInput = new TextInputBuilder()
+        .setCustomId('seller_harga')
+        .setLabel('Harga Barang (Rp)')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('Contoh: 500000')
+        .setRequired(true);
+
+    const ketInput = new TextInputBuilder()
+        .setCustomId('seller_ket')
+        .setLabel('Keterangan Tambahan')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Inc/Ex, Reffull/Noreff, dll')
+        .setRequired(false);
+
+    const row1 = new ActionRowBuilder().addComponents(namaInput);
+    const row2 = new ActionRowBuilder().addComponents(barangInput);
+    const row3 = new ActionRowBuilder().addComponents(hargaInput);
+    const row4 = new ActionRowBuilder().addComponents(ketInput);
+
+    sellerModal.addComponents(row1, row2, row3, row4);
+    return await interaction.showModal(sellerModal);
 }
 
 function replyWithError(interaction, message, isEditReply = false) {

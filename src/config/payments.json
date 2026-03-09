@@ -1,16 +1,16 @@
 {
   "lokal": {
-    "jago": {
-      "norek": "000000000000"
+    "bri": {
+      "norek": "660101000865507"
     },
-    "seabank": {
-      "norek": "000000000000"
+    "gopay": {
+      "norek": "085701678313"
     },
-    "bca": {
-      "norek": "000000000000"
+    "dana": {
+      "norek": "085701678313"
     },
     "qris": {
-      "imageUrl": "YOUR_QRIS_IMAGE_URL_HERE"
+      "imageUrl": "https://media.discordapp.net/attachments/1466070539201286214/1467658049325109298/IMG_2169.png?ex=6996ef52&is=69959dd2&hm=6b7dd68c8e818f01d3fadf0dcd93f29dce8704569e30988128116b09a55514e8&=&format=webp&quality=lossless&width=1418&height=1998"
     }
   },
   "internasional": {
@@ -20,7 +20,7 @@
       "usdt_erc20": "00000000000000000000000000000001"
     },
     "paypal": {
-      "email": "yourmail@gmail.com"
+      "email": "s.ssyukronmaulana@gmail.com"
     },
     "binance": {
       "id": "0000000",

@@ -1,26 +1,17 @@
 const { ActivityType } = require('discord.js');
-const config = require('../config/config.json');
 
-const getActivities = (client) => {
-    const guild = client.guilds.cache.first();
-    if (!guild) return [];
-    
-    const memberCount = guild.memberCount;
-    const buyerRole = guild.roles.cache.get(config.roles.buyer);
-    const buyerCount = buyerRole ? buyerRole.members.size : 0;
-    
+const getActivities = () => {
     return [
-        { name: `${memberCount} members and ${buyerCount} buyers!`, type: ActivityType.Watching },
-        { name: 'your transactions', type: ActivityType.Watching }
+        { name: 'Made with ⚡ by Envy', type: ActivityType.Playing }
     ];
 };
 
 let activityIndex = 0;
 
 function updateActivity(client) {
-    const activities = getActivities(client);
+    const activities = getActivities();
     if (activities.length === 0) return;
-    
+
     const activity = activities[activityIndex];
     client.user.setPresence({
         status: 'online',

@@ -40,6 +40,10 @@ async function handleModals(client, interaction) {
         return await handlePurchaseFormModal(interaction, client);
     } else if (interaction.customId === 'close_ticket_modal') {
         await handleCloseTicketModal(client, interaction);
+    } else if (interaction.customId === 'middleman_buyer_form_modal') {
+        return await handleMiddlemanBuyerFormModal(client, interaction);
+    } else if (interaction.customId === 'middleman_seller_form_modal') {
+        return await handleMiddlemanSellerFormModal(client, interaction);
     }
 }
 
@@ -48,7 +52,7 @@ async function handleReviewModal(client, interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-        const reviewChannelId = config.reviewChannelId || '1409205898634723409';
+        const reviewChannelId = config.reviewChannelId || '1434067685682970654';
         const reviewChannel = await client.channels.fetch(reviewChannelId).catch(() => null);
 
         if (!reviewChannel) {
@@ -99,7 +103,7 @@ async function handleReviewModal(client, interaction) {
         const submitBtn = new ButtonBuilder()
             .setCustomId('review_submit')
             .setLabel('Submit A Review')
-            .setStyle(ButtonStyle.Primary);
+            .setStyle(ButtonStyle.Secondary);
 
         const buttonRow = new ActionRowBuilder()
             .addComponents(submitBtn);
@@ -318,6 +322,158 @@ async function handleCloseTicketModal(client, interaction) {
             );
         await interaction.editReply({
             components: [errorBlock],
+        });
+    }
+}
+
+async function handleMiddlemanBuyerFormModal(client, interaction) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    try {
+        const nama = interaction.fields.getTextInputValue('buyer_nama');
+        const barang = interaction.fields.getTextInputValue('buyer_barang');
+        const harga = interaction.fields.getTextInputValue('buyer_harga');
+        const ket = interaction.fields.getTextInputValue('buyer_ket') || '-';
+
+        // Send form data to ticket channel (visible to all)
+        const ticketContainer = new ContainerBuilder();
+        const ticketTitle = new TextDisplayBuilder()
+            .setContent('## 📝 Form Pembeli');
+        const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+        const ticketContent = new TextDisplayBuilder()
+            .setContent(
+                `**Submitted by:** ${interaction.user}\n\n` +
+                `**Nama Lengkap:** ${nama}\n` +
+                `**Jenis Barang:** ${barang}\n` +
+                `**Harga:** Rp ${harga}\n` +
+                `**Keterangan:** ${ket}`
+            );
+        const separator2 = new SeparatorBuilder();
+        const timestamp = new TextDisplayBuilder()
+            .setContent(`*Submitted at: <t:${Math.floor(Date.now() / 1000)}:f>*`);
+
+        ticketContainer
+            .addTextDisplayComponents(ticketTitle)
+            .addSeparatorComponents(separator1)
+            .addTextDisplayComponents(ticketContent)
+            .addSeparatorComponents(separator2)
+            .addTextDisplayComponents(timestamp);
+
+        // Send to ticket channel
+        await interaction.channel.send({
+            components: [ticketContainer],
+            flags: MessageFlags.IsComponentsV2,
+        });
+
+        // Ephemeral confirmation (transparent)
+        const formContainer = new ContainerBuilder();
+        const titleSection = new TextDisplayBuilder()
+            .setContent('## Form Pembeli - Middleman');
+        const separator = new SeparatorBuilder();
+        const contentSection = new TextDisplayBuilder()
+            .setContent(
+                `**Nama Lengkap:** ${nama}\n` +
+                `**Jenis Barang:** ${barang}\n` +
+                `**Harga:** Rp ${harga}\n` +
+                `**Keterangan:** ${ket}`
+            );
+
+        formContainer
+            .addTextDisplayComponents(titleSection)
+            .addSeparatorComponents(separator)
+            .addTextDisplayComponents(contentSection);
+
+        await interaction.editReply({
+            components: [formContainer],
+            flags: MessageFlags.IsComponentsV2,
+        });
+
+        console.log(`[MIDDLEMAN] Buyer form submitted by ${interaction.user.tag}`);
+    } catch (error) {
+        console.error('[MIDDLEMAN BUYER FORM ERROR]', error.message);
+        const errorBlock = new ContainerBuilder()
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
+            );
+        await interaction.editReply({
+            components: [errorBlock],
+            flags: MessageFlags.IsComponentsV2,
+        });
+    }
+}
+
+async function handleMiddlemanSellerFormModal(client, interaction) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    try {
+        const nama = interaction.fields.getTextInputValue('seller_nama');
+        const barang = interaction.fields.getTextInputValue('seller_barang');
+        const harga = interaction.fields.getTextInputValue('seller_harga');
+        const ket = interaction.fields.getTextInputValue('seller_ket') || '-';
+
+        // Send form data to ticket channel (visible to all)
+        const ticketContainer = new ContainerBuilder();
+        const ticketTitle = new TextDisplayBuilder()
+            .setContent('## 📝 Form Penjual');
+        const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+        const ticketContent = new TextDisplayBuilder()
+            .setContent(
+                `**Submitted by:** ${interaction.user}\n\n` +
+                `**Nama Lengkap:** ${nama}\n` +
+                `**Jenis Barang:** ${barang}\n` +
+                `**Harga:** Rp ${harga}\n` +
+                `**Keterangan:** ${ket}`
+            );
+        const separator2 = new SeparatorBuilder();
+        const timestamp = new TextDisplayBuilder()
+            .setContent(`*Submitted at: <t:${Math.floor(Date.now() / 1000)}:f>*`);
+
+        ticketContainer
+            .addTextDisplayComponents(ticketTitle)
+            .addSeparatorComponents(separator1)
+            .addTextDisplayComponents(ticketContent)
+            .addSeparatorComponents(separator2)
+            .addTextDisplayComponents(timestamp);
+
+        // Send to ticket channel
+        await interaction.channel.send({
+            components: [ticketContainer],
+            flags: MessageFlags.IsComponentsV2,
+        });
+
+        // Ephemeral confirmation (transparent)
+        const formContainer = new ContainerBuilder();
+        const titleSection = new TextDisplayBuilder()
+            .setContent('## Form Penjual - Middleman');
+        const separator = new SeparatorBuilder();
+        const contentSection = new TextDisplayBuilder()
+            .setContent(
+                `**Nama Lengkap:** ${nama}\n` +
+                `**Jenis Barang:** ${barang}\n` +
+                `**Harga:** Rp ${harga}\n` +
+                `**Keterangan:** ${ket}`
+            );
+
+        formContainer
+            .addTextDisplayComponents(titleSection)
+            .addSeparatorComponents(separator)
+            .addTextDisplayComponents(contentSection);
+
+        await interaction.editReply({
+            components: [formContainer],
+            flags: MessageFlags.IsComponentsV2,
+        });
+
+        console.log(`[MIDDLEMAN] Seller form submitted by ${interaction.user.tag}`);
+    } catch (error) {
+        console.error('[MIDDLEMAN SELLER FORM ERROR]', error.message);
+        const errorBlock = new ContainerBuilder()
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(`❌ Error: ${error.message}`)
+            );
+        await interaction.editReply({
+            components: [errorBlock],
+            flags: MessageFlags.IsComponentsV2,
         });
     }
 }

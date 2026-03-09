@@ -57,7 +57,7 @@ function createTicketsSystemEmbed(client) {
     const helpButton = new ButtonBuilder()
         .setCustomId('ticket_help')
         .setLabel('Help')
-        .setStyle(ButtonStyle.Primary);
+        .setStyle(ButtonStyle.Secondary);
 
     const actionRow = new ActionRowBuilder().addComponents(purchaseButton, helpButton);
     container.addActionRowComponents(actionRow);
@@ -150,7 +150,7 @@ function getMiddlemanButtons() {
             new ButtonBuilder()
                 .setCustomId('middleman_request')
                 .setLabel('Open Ticket')
-                .setStyle(ButtonStyle.Success)
+                .setStyle(ButtonStyle.Secondary)
         );
 
     return [row];

@@ -2,6 +2,12 @@ const { MessageFlags, TextDisplayBuilder, ContainerBuilder, EmbedBuilder, Action
 const config = require('../../config/config.json');
 const fs = require('fs');
 const path = require('path');
+const {
+  create_platform_select_embed,
+  create_cheat_select_embed,
+  create_cheat_detail_embed,
+  create_back_button
+} = require('../../shared/catalog/catalog_controller');
 
 const paymentsFile = path.join(__dirname, '../../config/payments.json');
 
@@ -41,6 +47,84 @@ const commandCategories = {
 
 async function handleSelectMenus(client, interaction) {
     try {
+        // - CATALOG GAME SELECT - \\
+        if (interaction.customId === 'catalog_game_select') {
+            const selected_game = interaction.values[0];
+            const result        = create_platform_select_embed(selected_game);
+
+            if (!result) {
+                return await interaction.update({
+                    content : 'Game not found or coming soon!',
+                    components: []
+                });
+            }
+
+            const { container, select_row } = result;
+
+            await interaction.update({
+                components : [container, select_row],
+                flags      : MessageFlags.IsComponentsV2
+            });
+            return;
+        }
+
+        // - CATALOG PLATFORM SELECT - \\
+        if (interaction.customId === 'catalog_platform_select') {
+            const selected_value = interaction.values[0];
+            const [game_id, platform_id] = selected_value.split('_');
+            const result                 = create_cheat_select_embed(game_id, platform_id);
+
+            if (!result) {
+                return await interaction.update({
+                    content : 'Platform not found!',
+                    components: []
+                });
+            }
+
+            const { container, select_row } = result;
+
+            await interaction.update({
+                components : [container, select_row],
+                flags      : MessageFlags.IsComponentsV2
+            });
+            return;
+        }
+
+        // - CATALOG CHEAT SELECT - \\
+        if (interaction.customId === 'catalog_cheat_select') {
+            const selected_value = interaction.values[0];
+            const [game_id, platform_id, cheat_id] = selected_value.split('_');
+            const result                           = create_cheat_detail_embed(game_id, platform_id, cheat_id);
+
+            if (!result) {
+                return await interaction.update({
+                    content : 'Cheat details not found!',
+                    components: []
+                });
+            }
+
+            const { container, button_row } = result;
+            const back_row                  = create_back_button();
+
+            await interaction.update({
+                components : [container, button_row, back_row],
+                flags      : MessageFlags.IsComponentsV2
+            });
+            return;
+        }
+
+        // - CATALOG BACK TO MAIN - \\
+        if (interaction.customId === 'catalog_back_to_main') {
+            const { create_main_catalog_embed } = require('../../shared/catalog/catalog_controller');
+            const { container, select_row }     = create_main_catalog_embed();
+
+            await interaction.update({
+                components : [container, select_row],
+                flags      : MessageFlags.IsComponentsV2
+            });
+            return;
+        }
+
         if (interaction.customId === 'help_category_select') {
             const selectedCategory = interaction.values[0];
             const category = commandCategories[selectedCategory];

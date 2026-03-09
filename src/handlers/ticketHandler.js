@@ -105,7 +105,7 @@ const checkStoreStatus = (type = 'ticket') => {
 };
 
 // Unified ticket notification builder - consistent format for all ticket types
-const createStaffNotification = (type, ticketId, userId, accentColor, threadId, isMiddleman = false, staffMembers = [], claimedBy = null, additionalData = {}) => {
+const createStaffNotification = (type, ticketId, userId, threadId, isMiddleman = false, staffMembers = [], claimedBy = null, additionalData = {}) => {
     const userAvatar = additionalData.userAvatar || '';
     
     const typeMap = {
@@ -155,7 +155,6 @@ const createStaffNotification = (type, ticketId, userId, accentColor, threadId, 
 
     // Build container
     const containerBuilder = new ContainerBuilder()
-        .setAccentColor(accentColor)
         .addSectionComponents(notifTitle)
         .addSeparatorComponents(notifSep)
         .addTextDisplayComponents(detailsBuilder)
@@ -258,7 +257,6 @@ const createTicket = async (type, interaction, client, formData = null) => {
 
         const threadPrefix = type === 'purchase' ? 'purchase' : 'help';
         const threadName = `${threadPrefix}-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.primaryColor, 16);
 
         const newTicket = await ticketChannel.threads.create({
             name: threadName,
@@ -274,12 +272,12 @@ const createTicket = async (type, interaction, client, formData = null) => {
         const closeBtn = new ButtonBuilder()
             .setCustomId('ticket_close')
             .setLabel('Close Ticket')
-            .setStyle(ButtonStyle.Danger);
+            .setStyle(ButtonStyle.Secondary);
 
         const claimBtn = new ButtonBuilder()
             .setCustomId('ticket_claim')
             .setLabel('Claim Ticket')
-            .setStyle(ButtonStyle.Primary);
+            .setStyle(ButtonStyle.Secondary);
 
         const addMemberBtn = new ButtonBuilder()
             .setCustomId('ticket_add')
@@ -324,7 +322,6 @@ const createTicket = async (type, interaction, client, formData = null) => {
                     type,
                     ticketId,
                     interaction.user.id,
-                    accentColor,
                     newTicket.id,
                     false,
                     [],
@@ -362,28 +359,27 @@ const createTicket = async (type, interaction, client, formData = null) => {
         // Create ephemeral response with new format
         const titleDisplay = new TextDisplayBuilder()
             .setContent('## HAJI UTONG - Ticket System');
-        
+
         const descDisplay = new TextDisplayBuilder()
             .setContent('Your ticket has been created.\nPlease wait until staff respond to your ticket!');
-        
+
+        const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+        const separator2 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+
+        // View ticket button
         const viewBtn = new ButtonBuilder()
             .setLabel('View Ticket')
             .setStyle(ButtonStyle.Link)
             .setURL(newTicket.url);
-        
-        const viewButtonRow = new ActionRowBuilder().addComponents(viewBtn);
-        
-        const separator = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
-        
-        const descSection = new SectionBuilder()
-            .addTextDisplayComponents(descDisplay)
-            .addActionRowComponents(viewButtonRow);
-        
+
+        const buttonRow = new ActionRowBuilder().addComponents(viewBtn);
+
         const container = new ContainerBuilder()
-            .setAccentColor(accentColor)
             .addTextDisplayComponents(titleDisplay)
-            .addSeparatorComponents(separator)
-            .addSectionComponents(descSection);
+            .addSeparatorComponents(separator1)
+            .addTextDisplayComponents(descDisplay)
+            .addSeparatorComponents(separator2)
+            .addActionRowComponents(buttonRow);
 
         await interaction.editReply({
             components: [container],
@@ -560,7 +556,6 @@ async function handleMiddlemanRequestButton(interaction, client) {
     const selectRow = new ActionRowBuilder().addComponents(rangeSelect);
 
     const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
         .addTextDisplayComponents(title)
         .addSeparatorComponents(separator1)
         .addTextDisplayComponents(description)
@@ -651,7 +646,6 @@ async function handleMiddlemanRequestModal(interaction, client) {
         };
 
         const threadName = `midman-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const accentColor = parseInt(config.primaryColor, 16);
 
         const newRequest = await middlemanChannel.threads.create({
             name: threadName,
@@ -664,12 +658,12 @@ async function handleMiddlemanRequestModal(interaction, client) {
         const closeBtn = new ButtonBuilder()
             .setCustomId('ticket_close')
             .setLabel('Close Ticket')
-            .setStyle(ButtonStyle.Danger);
+            .setStyle(ButtonStyle.Secondary);
 
         const claimBtn = new ButtonBuilder()
             .setCustomId('ticket_claim')
             .setLabel('Claim Ticket')
-            .setStyle(ButtonStyle.Primary);
+            .setStyle(ButtonStyle.Secondary);
 
         const addMemberBtn = new ButtonBuilder()
             .setCustomId('ticket_add')
@@ -734,7 +728,6 @@ async function handleMiddlemanRequestModal(interaction, client) {
                     'middleman',
                     requestId,
                     interaction.user.id,
-                    accentColor,
                     newRequest.id,
                     true,
                     [],
@@ -769,12 +762,25 @@ async function handleMiddlemanRequestModal(interaction, client) {
         // Create ephemeral response dengan format seperti screenshot
         try {
             const ephemeralTitle = new TextDisplayBuilder().setContent(`## HAJI UTONG - Ticket System`);
-            const ephemeralDesc = new TextDisplayBuilder().setContent(`✅ Your ticket has been opened!\n\n[Click here to see your ticket](${newRequest.url})`);
-            
+            const ephemeralDesc = new TextDisplayBuilder().setContent(`✅ Your ticket has been opened!`);
+
+            const separator1 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+            const separator2 = new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large);
+
+            // View ticket button
+            const viewBtn = new ButtonBuilder()
+                .setLabel('View Ticket')
+                .setStyle(ButtonStyle.Link)
+                .setURL(newRequest.url);
+
+            const buttonRow = new ActionRowBuilder().addComponents(viewBtn);
+
             const ephemeralContainer = new ContainerBuilder()
-                .setAccentColor(accentColor)
                 .addTextDisplayComponents(ephemeralTitle)
-                .addTextDisplayComponents(ephemeralDesc);
+                .addSeparatorComponents(separator1)
+                .addTextDisplayComponents(ephemeralDesc)
+                .addSeparatorComponents(separator2)
+                .addActionRowComponents(buttonRow);
 
             await interaction.editReply({
                 components: [ephemeralContainer],
@@ -785,11 +791,10 @@ async function handleMiddlemanRequestModal(interaction, client) {
             // Try fallback reply
             try {
                 const fallbackContainer = new ContainerBuilder()
-                    .setAccentColor(accentColor)
                     .addTextDisplayComponents(
                         new TextDisplayBuilder().setContent(`✅ Your ticket has been opened!`)
                     );
-                
+
                 await interaction.editReply({
                     components: [fallbackContainer],
                     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -942,7 +947,6 @@ async function handlePurchaseFormModal(interaction, client) {
         const productName = interaction.fields.getTextInputValue('purchase_product');
         const paymentMethod = interaction.fields.getTextInputValue('purchase_method');
         const notes = interaction.fields.getTextInputValue('purchase_notes') || '-';
-        const accentColor = parseInt(config.primaryColor, 16);
 
         // Get payment details
         const paymentDetails = getPaymentDetails(paymentMethod);
@@ -984,8 +988,7 @@ async function handlePurchaseFormModal(interaction, client) {
 // ==================== TICKET MESSAGE TEMPLATES ====================
 
 function createPurchaseTicketMessage(user, formData = {}, buttons = []) {
-    const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16));
+    const container = new ContainerBuilder();
 
     // Header section
     container.addTextDisplayComponents(
@@ -1045,8 +1048,7 @@ function createPurchaseTicketMessage(user, formData = {}, buttons = []) {
 }
 
 function createHelpTicketMessage(user, buttons = []) {
-    const container = new ContainerBuilder()
-        .setAccentColor(0x1A472A);
+    const container = new ContainerBuilder();
 
     // Header section
     container.addTextDisplayComponents(
@@ -1090,11 +1092,8 @@ function createHelpTicketMessage(user, buttons = []) {
 }
 
 function createMiddlemanTicketMessage(user, ticketData = {}, buttons = []) {
-    const accentColor = parseInt(config.primaryColor, 16);
-    
     // ===== EMBED 1: Header with greeting and transaction details =====
-    const embed1 = new ContainerBuilder()
-        .setAccentColor(accentColor);
+    const embed1 = new ContainerBuilder();
 
     embed1.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`# HAJI UTONG - Middleman`)
@@ -1104,7 +1103,7 @@ function createMiddlemanTicketMessage(user, ticketData = {}, buttons = []) {
     const taggedUsersMentions = (ticketData.taggedUsers || [user])
         .map(u => `<@${u.id}>`)
         .join(' dan ');
-    
+
     embed1.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`Selamat ${timeGreeting}, ${taggedUsersMentions}`)
     );
@@ -1130,9 +1129,8 @@ function createMiddlemanTicketMessage(user, ticketData = {}, buttons = []) {
         new TextDisplayBuilder().setContent(`Harap tunggu sampai staff masuk ke dalam ticketmu!`)
     );
 
-    // ===== EMBED 2: Form =====
-    const embed2 = new ContainerBuilder()
-        .setAccentColor(accentColor);
+    // ===== EMBED 2: Form with buttons =====
+    const embed2 = new ContainerBuilder();
 
     embed2.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`## Middleman Form`)
@@ -1145,13 +1143,21 @@ function createMiddlemanTicketMessage(user, ticketData = {}, buttons = []) {
     // Separator 3
     embed2.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large));
 
-    embed2.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-            `\`\`\`\nPenjual:\nPembeli:\nJenis Barang yang Dijual:\nHarga Barang yang Dijual: Rp.\nInc/Ex:\nReffull/Noreff:\n\`\`\``
-        )
-    );
+    // Create form buttons for buyer and seller
+    const buyerFormBtn = new ButtonBuilder()
+        .setCustomId('middleman_form_buyer')
+        .setLabel('Form Pembeli')
+        .setStyle(ButtonStyle.Secondary);
 
-    // Separator 4
+    const sellerFormBtn = new ButtonBuilder()
+        .setCustomId('middleman_form_seller')
+        .setLabel('Form Penjual')
+        .setStyle(ButtonStyle.Secondary);
+
+    const formButtonRow = new ActionRowBuilder().addComponents(buyerFormBtn, sellerFormBtn);
+    embed2.addActionRowComponents(formButtonRow);
+
+    // Separator 5
     embed2.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large));
 
     embed2.addTextDisplayComponents(
@@ -1166,8 +1172,7 @@ function createMiddlemanTicketMessage(user, ticketData = {}, buttons = []) {
     );
 
     // ===== EMBED 3: Buttons =====
-    const embed3 = new ContainerBuilder()
-        .setAccentColor(accentColor);
+    const embed3 = new ContainerBuilder();
 
     if (buttons && buttons.length > 0) {
         const buttonRow = new ActionRowBuilder().addComponents(...buttons);

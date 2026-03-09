@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, TextDisplayBuilder, ContainerBuilder, SeparatorBuilder, MessageFlags, MediaGalleryBuilder, MediaGalleryItemBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, TextDisplayBuilder, ContainerBuilder, SeparatorBuilder, MessageFlags, MediaGalleryBuilder, MediaGalleryItemBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder } = require('discord.js');
 const config = require('../../config/config.json');
 const fs = require('fs');
 const path = require('path');
@@ -34,40 +34,116 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      let responseText = '';
       let headerTitle = '';
       let imageUrl = null;
+      let briSection, gopaySection, danaSection, qrisText;
+      let paypalSection, btcSection, ethSection, usdtSection, binanceSection;
 
       if (paymentType === 'lokal') {
-        headerTitle = '💳 **Payment Methods - Lokal**';
-        responseText = `### <:BankJago:1423319788062642206> Bank Jago\n`;
-        responseText += `Nomor Rekening: \`${payments.lokal.jago.norek || '[NOMOR_REKENING]'}\`\n\n`;
+        headerTitle = ' <:checkmar:1473669951306072074> **Payment Methods - Lokal**';
 
-        responseText += `### <:Seabank:1423319869767553167> Seabank\n`;
-        responseText += `Nomor Rekening: \`${payments.lokal.seabank.norek || '[NOMOR_REKENING]'}\`\n\n`;
+        // Bank BRI Section with copy button
+        const briButton = new ButtonBuilder()
+          .setCustomId('copy_bri')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        briSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:briiii:1473666278152601621> Bank BRI'),
+            new TextDisplayBuilder().setContent(`Nomor Rekening: \`${payments.lokal.bri.norek || '[NOMOR_REKENING]'}\``)
+          )
+          .setButtonAccessory(briButton);
 
-        responseText += `### <:BCA:1459742597999362226> BCA\n`;
-        responseText += `Nomor Rekening: \`${payments.lokal.bca.norek || '[NOMOR_REKENING]'}\`\n\n`;
+        // Gopay Section with copy button
+        const gopayButton = new ButtonBuilder()
+          .setCustomId('copy_gopay')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        gopaySection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:FS_Gopay:1473665380470755408> Gopay'),
+            new TextDisplayBuilder().setContent(`Nomor Rekening: \`${payments.lokal.gopay.norek || '[NOMOR_REKENING]'}\``)
+          )
+          .setButtonAccessory(gopayButton);
 
-        responseText += `### <:QRIS:1411033023914447011> QRIS\n`;
-        responseText += `Scan QR Code untuk pembayaran instant`;
+        // Dana Section with copy button
+        const danaButton = new ButtonBuilder()
+          .setCustomId('copy_dana')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        danaSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:FS_Dana:1473665378562478196> Dana'),
+            new TextDisplayBuilder().setContent(`Nomor Rekening: \`${payments.lokal.dana.norek || '[NOMOR_REKENING]'}\``)
+          )
+          .setButtonAccessory(danaButton);
+
+        // QRIS Section
+        qrisText = new TextDisplayBuilder()
+          .setContent('### <:Qris:1473665385059455122> QRIS\nScan QR Code untuk pembayaran instant');
         imageUrl = payments.lokal.qris.imageUrl;
       } else if (paymentType === 'internasional') {
-        headerTitle = '💳 **Payment Methods - Internasional**';
-        responseText = `### <:Paypal:1411033414358012038> **PayPal F&F**\n`;
-        responseText += `Email: \`${payments.internasional.paypal.email || 'email@example.com'}\`\n\n`;
+        headerTitle = ' <:checkmar:1473669951306072074> **Payment Methods - Internasional**';
 
-        responseText += `### <:bitcoin:1458675619591229582> **Bitcoin (BTC)**\n`;
-        responseText += `Wallet: \`${payments.internasional.crypto.btc || '[WALLET_BTC]'}\`\n\n`;
+        // PayPal Section with copy button
+        const paypalButton = new ButtonBuilder()
+          .setCustomId('copy_paypal')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        paypalSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:Paypal:1411033414358012038> **PayPal F&F**'),
+            new TextDisplayBuilder().setContent(`Email: \`${payments.internasional.paypal.email || 'email@example.com'}\``)
+          )
+          .setButtonAccessory(paypalButton);
 
-        responseText += `### <:ethereum:1458675723291070621> **Ethereum (ETH)**\n`;
-        responseText += `Wallet: \`${payments.internasional.crypto.ethereum_erc20 || '[WALLET_ETH]'}\`\n\n`;
+        // BTC Section with copy button
+        const btcButton = new ButtonBuilder()
+          .setCustomId('copy_btc')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        btcSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:bitcoin:1458675619591229582> **Bitcoin (BTC)**'),
+            new TextDisplayBuilder().setContent(`Wallet: \`${payments.internasional.crypto.btc || '[WALLET_BTC]'}\``)
+          )
+          .setButtonAccessory(btcButton);
 
-        responseText += `### <:USDT:1458675804014645332> **USDT (ERC20)**\n`;
-        responseText += `Wallet: \`${payments.internasional.crypto.usdt_erc20 || '[WALLET_USDT]'}\`\n\n`;
+        // ETH Section with copy button
+        const ethButton = new ButtonBuilder()
+          .setCustomId('copy_eth')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        ethSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:ethereum:1458675723291070621> **Ethereum (ETH)**'),
+            new TextDisplayBuilder().setContent(`Wallet: \`${payments.internasional.crypto.ethereum_erc20 || '[WALLET_ETH]'}\``)
+          )
+          .setButtonAccessory(ethButton);
 
-        responseText += `### <:Binance:1458675544840339526> **Binance**\n`;
-        responseText += `ID: \`${payments.internasional.binance.id || '[BINANCE_ID]'}\``;
+        // USDT Section with copy button
+        const usdtButton = new ButtonBuilder()
+          .setCustomId('copy_usdt')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        usdtSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:USDT:1458675804014645332> **USDT (ERC20)**'),
+            new TextDisplayBuilder().setContent(`Wallet: \`${payments.internasional.crypto.usdt_erc20 || '[WALLET_USDT]'}\``)
+          )
+          .setButtonAccessory(usdtButton);
+
+        // Binance Section with copy button
+        const binanceButton = new ButtonBuilder()
+          .setCustomId('copy_binance')
+          .setLabel('Copy')
+          .setStyle(ButtonStyle.Secondary);
+        binanceSection = new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent('### <:Binance:1458675544840339526> **Binance**'),
+            new TextDisplayBuilder().setContent(`ID: \`${payments.internasional.binance.id || '[BINANCE_ID]'}\``)
+          )
+          .setButtonAccessory(binanceButton);
         imageUrl = payments.internasional.binance.qrUrl;
       }
 
@@ -77,23 +153,40 @@ module.exports = {
 
       const warningText = new TextDisplayBuilder()
         .setContent(
-          `## ⚠️ **PENTING!**\n` +
-          `Semua pembayaran a.n \`Naufal Alif Prasetya\`\n` +
+          `## <:82470partnergray:1473667902233251840> **PENTING!**\n` +
+          `Semua pembayaran a.n \`Syukron Maulana\`\n` +
           `Pembayaran yang salah **TIDAK DAPAT** dikembalikan.`
         );
 
-      const detailsText = new TextDisplayBuilder()
-        .setContent(responseText);
-
       const sep = new SeparatorBuilder();
       const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16))
         .addTextDisplayComponents(headerText)
         .addSeparatorComponents(sep)
         .addTextDisplayComponents(warningText)
-        .addSeparatorComponents(sep)
-        .addTextDisplayComponents(detailsText)
         .addSeparatorComponents(sep);
+
+      // Add payment sections based on type
+      if (paymentType === 'lokal') {
+        container.addSectionComponents(briSection);
+        container.addSeparatorComponents(sep);
+        container.addSectionComponents(gopaySection);
+        container.addSeparatorComponents(sep);
+        container.addSectionComponents(danaSection);
+        container.addSeparatorComponents(sep);
+        container.addTextDisplayComponents(qrisText);
+        container.addSeparatorComponents(sep);
+      } else {
+        container.addSectionComponents(paypalSection);
+        container.addSeparatorComponents(sep);
+        container.addSectionComponents(btcSection);
+        container.addSeparatorComponents(sep);
+        container.addSectionComponents(ethSection);
+        container.addSeparatorComponents(sep);
+        container.addSectionComponents(usdtSection);
+        container.addSeparatorComponents(sep);
+        container.addSectionComponents(binanceSection);
+        container.addSeparatorComponents(sep);
+      }
 
       // Add image gallery if available
       if (imageUrl) {
@@ -110,6 +203,71 @@ module.exports = {
       };
 
       await interaction.editReply(replyOptions);
+
+      // Get the reply message for collector
+      const replyMessage = await interaction.fetchReply();
+
+      // Create collector for button interactions
+      const filter = (i) =>
+        i.user.id === interaction.user.id &&
+        i.message.id === replyMessage.id;
+
+      const collector = interaction.channel.createMessageComponentCollector({
+        filter,
+        time: 600000, // 10 minutes
+      });
+
+      collector.on('collect', async (buttonInteraction) => {
+        const customId = buttonInteraction.customId;
+        let copyText = '';
+        let label = '';
+
+        switch (customId) {
+          case 'copy_bri':
+            copyText = payments.lokal.bri.norek;
+            label = 'Bank BRI';
+            break;
+          case 'copy_gopay':
+            copyText = payments.lokal.gopay.norek;
+            label = 'Gopay';
+            break;
+          case 'copy_dana':
+            copyText = payments.lokal.dana.norek;
+            label = 'Dana';
+            break;
+          case 'copy_paypal':
+            copyText = payments.internasional.paypal.email;
+            label = 'PayPal';
+            break;
+          case 'copy_btc':
+            copyText = payments.internasional.crypto.btc;
+            label = 'Bitcoin (BTC)';
+            break;
+          case 'copy_eth':
+            copyText = payments.internasional.crypto.ethereum_erc20;
+            label = 'Ethereum (ETH)';
+            break;
+          case 'copy_usdt':
+            copyText = payments.internasional.crypto.usdt_erc20;
+            label = 'USDT (ERC20)';
+            break;
+          case 'copy_binance':
+            copyText = payments.internasional.binance.id;
+            label = 'Binance ID';
+            break;
+          default:
+            return;
+        }
+
+        await buttonInteraction.reply({
+          content: `📋 ${label}\n\`\`\`${copyText}\`\`\``,
+          ephemeral: true,
+        });
+      });
+
+      collector.on('end', () => {
+        // Collector expired, no action needed
+      });
     } catch (error) {
       console.error('Error in payments command:', error);
       const errorText = new TextDisplayBuilder()

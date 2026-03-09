@@ -9,8 +9,7 @@ const setupLogger = require('./setupLogger');
  * @returns {ContainerBuilder} The embed container
  */
 function createTicketsSystemEmbed(client) {
-    const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16));
+    const container = new ContainerBuilder();
 
     // Get guild icon
     const guild = client.guilds.cache.first();
@@ -36,7 +35,7 @@ function createTicketsSystemEmbed(client) {
 
     // Warning section with proper formatting
     container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent('# ⚠️ IMPORTANT:\n• Do not create tickets just for fun or games, as this will distract our staff!\n• If your ticket is not answered for a long time, please tag the staff on duty.\n\n**If you are caught violating the above rules, we will not hesitate to blacklist you!**')
+        new TextDisplayBuilder().setContent('# <:82470partnergray:1473667902233251840> IMPORTANT:\n• Do not create tickets just for fun or games, as this will distract our staff!\n• If your ticket is not answered for a long time, please tag the staff on duty.\n\n**If you are caught violating the above rules, we will not hesitate to blacklist you!**')
     );
 
     // Large separator
@@ -66,8 +65,7 @@ function createTicketsSystemEmbed(client) {
  * @returns {ContainerBuilder} The embed container with button
  */
 function createMiddlemanEmbed(client) {
-    const container = new ContainerBuilder()
-        .setAccentColor(parseInt(config.primaryColor, 16));
+    const container = new ContainerBuilder();
 
     // Get guild icon
     const guild = client.guilds.cache.first();
@@ -93,7 +91,7 @@ function createMiddlemanEmbed(client) {
 
     // Pricing section title
     container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent('💰 **Struktur Biaya Kami:**')
+        new TextDisplayBuilder().setContent(' <:9516moneywings:1473667846469849322> **Struktur Biaya Kami:**')
     );
 
     // Pricing details
